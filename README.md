@@ -1,1 +1,3 @@
-![Alt text](./logo.svg)
+![UnrealGT Logo](./logo.svg)
+
+Documentation & Info: https://unrealgt.github.io/
