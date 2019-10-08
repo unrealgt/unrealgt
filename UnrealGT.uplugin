@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "UnrealGT",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "Lolleko",
+	"CreatedByURL": "",
+	"DocsURL": "https://unrealgt.github.io",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "UnrealGT",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
