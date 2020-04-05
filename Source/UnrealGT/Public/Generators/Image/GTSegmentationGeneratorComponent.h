@@ -12,10 +12,15 @@
 class UGTSceneCaptureComponent2D;
 
 /**
- * Can generate segmentation for an image. You can assign components color by adding a filter color pair to the ComponentToColor map.
- * Requires "Enabled with stencil" project setting in Engine > Rendering > Postprocessing > Custom-Depth Stencil Pass
+ * Can generate segmentation for an image. You can assign components color by adding a filter color
+ * pair to the ComponentToColor map.
+ * **Requires "Enabled with stencil" project setting in `Engine > Rendering > Postprocessing >
+ * Custom-Depth Stencil Pass`**
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), hidecategories = (Collision, Object, Physics, SceneComponent))
+UCLASS(
+    ClassGroup = (Custom),
+    meta = (BlueprintSpawnableComponent),
+    hidecategories = (Collision, Object, Physics, SceneComponent))
 class UNREALGT_API UGTSegmentationGeneratorComponent : public UGTImageGeneratorBase
 {
     GENERATED_BODY()
@@ -29,6 +34,9 @@ private:
     UPROPERTY(EditAnyWhere, Category = Segmentaiton)
     TMap<FGTObjectFilter, FColor> ComponentToColor;
 
-    UPROPERTY(EditAnyWhere, Category = Segmentaiton, Meta = (DisplayName = "Apply Closing (Dilation & Erosion)"))
+    UPROPERTY(
+        EditAnyWhere,
+        Category = Segmentaiton,
+        Meta = (DisplayName = "Apply Closing (Dilation & Erosion)"))
     bool bShouldApplyCloseMorph;
 };

@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 
-#include "Generators/GTDataGeneratorComponent.h"
 #include "GTGeneratorReference.h"
-#include "GTObjectFilter.h"
 #include "GTImage.h"
+#include "GTObjectFilter.h"
+#include "Generators/GTDataGeneratorComponent.h"
 
 #include "GTActorInfoGeneratorComponent.generated.h"
 
@@ -18,100 +18,129 @@ class UGTImageGeneratorBase;
  * Generates information about actors in a scene (e.g. MeshName, BoundingBoxes, ActorName).
  * The Output format can be customize via formatting strings.
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), hidecategories = (Collision, Object, Physics, SceneComponent))
+UCLASS(
+    ClassGroup = (Custom),
+    meta = (BlueprintSpawnableComponent),
+    hidecategories = (Collision, Object, Physics, SceneComponent))
 class UNREALGT_API UGTActorInfoGeneratorComponent : public UGTDataGeneratorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 public:
-	UGTActorInfoGeneratorComponent();
+    UGTActorInfoGeneratorComponent();
 
-	UPROPERTY(EditAnywhere, Category = "Tracked Actors")
-		TArray<FGTObjectFilter> TrackActorsThatMatchFilter;
+    UPROPERTY(EditAnywhere, Category = "Tracked Actors")
+    TArray<FGTObjectFilter> TrackActorsThatMatchFilter;
 
-	UPROPERTY(EditAnywhere, Category = "Tracked Actors")
-		bool bOnlyTrackRecentlyRenderedActors;
+    /**
+     * Track only actors that are "on screen"/"within an image".
+     * This setting requires LinkedImageGenerator to be set.
+     */
+    UPROPERTY(EditAnywhere, Category = "Tracked Actors")
+    bool bOnlyTrackRecentlyRenderedActors;
 
-	UPROPERTY(EditAnywhere, Category = "Tracked Actors")
-		bool bOnlyTrackOnScreenActors;
+    UPROPERTY(EditAnywhere, Category = "Tracked Actors")
+    bool bOnlyTrackOnScreenActors;
 
-	UPROPERTY(EditAnywhere, Category = "Tracked Actors")
-		FVector2D MinimalRequiredBoundingBoxSize;
+    UPROPERTY(EditAnywhere, Category = "Tracked Actors")
+    FVector2D MinimalRequiredBoundingBoxSize;
 
-	UPROPERTY(EditAnywhere, Category = "Tracked Actors")
-		float MaxDistanceToCamera;
+    UPROPERTY(EditAnywhere, Category = "Tracked Actors")
+    float MaxDistanceToCamera;
 
-	/**
-	 * This will drastically increase bounding box accuracy but requires an additional render pass. The Larger the resolution
-	 * of the LinkedGenerator the larger the performance hit.
-	 */
-	UPROPERTY(EditAnywhere, Category = "Output Format")
-		bool bAccurateBoundingBoxes;
+    /**
+     * Drastically Increase the accuracy of the bounding boxes, but requires an additional render
+     * pass. The additional render pass creates a segmentation map for the tracked actors and uses
+     * that map to refine the bounding boxes.
+     *
+     * **Therefore Requires "Enabled with stencil" in `Engine > Rendering > Postprocessing >
+     * Custom-Depth Stencil Pass` to be set**
+     *
+     * The additional render pas at least doubles the cost of creating the bounding boxes.
+     * The Larger the resolution of the LinkedGenerator the larger the performance hit.
+     */
+    UPROPERTY(EditAnywhere, Category = "Output Format")
+    bool bAccurateBoundingBoxes;
 
-	/** Apply Close for Bounding Box Segmentation */
-	UPROPERTY(EditAnyWhere, Category = "Output Format", Meta = (DisplayName = "Apply Closing (Dilation & Erosion) for Bounding Box calculation", EditCondtion = "bAccurateBoundingBoxes"))
-		bool bShouldApplyCloseMorph;
+    /** Apply Close for Bounding Box Segmentation */
+    UPROPERTY(
+        EditAnyWhere,
+        Category = "Output Format",
+        Meta =
+            (DisplayName = "Apply Closing (Dilation & Erosion) for Bounding Box calculation",
+             EditCondtion = "bAccurateBoundingBoxes"))
+    bool bShouldApplyCloseMorph;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format")
-		FGTGeneratorReference LinkedImageGenerator;
+    /**
+     * Link an image generator to this component.
+     * The linked Generator is used to determine when an
+     * actor is "on screen" and should be tracked.
+     * Setting this is also required for generating 2D
+     * bounding boxes.
+     */
+    UPROPERTY(EditAnywhere, Category = "Output Format")
+    FGTGeneratorReference LinkedImageGenerator;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
-		FString Header;
+    UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
+    FString Header;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
-		FString FormatActorString;
+    UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
+    FString FormatActorString;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
-		FString Separator;
+    UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
+    FString Separator;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
-		FString Footer;
+    UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
+    FString Footer;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
-		FString FormatVector2DString;
+    UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
+    FString FormatVector2DString;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
-		FString FormatVector3DString;
+    UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
+    FString FormatVector3DString;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
-		FString FormatRotatorString;
+    UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
+    FString FormatRotatorString;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
-		FString Format2DBoxString;
+    UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
+    FString Format2DBoxString;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
-		FString Format3DBoxString;
+    UPROPERTY(EditAnywhere, Category = "Output Format", meta = (MultiLine = "true"))
+    FString Format3DBoxString;
 
-	UPROPERTY(EditAnywhere, Category = "Output Format")
-		TMap<FString, FString> ReplaceStrings;
+    UPROPERTY(EditAnywhere, Category = "Output Format")
+    TMap<FString, FString> ReplaceStrings;
 
-	virtual void GenerateData(const FDateTime& TimeStamp);
+    virtual void GenerateData(const FDateTime& TimeStamp);
 
-	virtual void DrawDebug(FViewport* Viewport, FCanvas* Canvas) override;
+    virtual void DrawDebug(FViewport* Viewport, FCanvas* Canvas) override;
 
 protected:
-	void BeginPlay() override;
+    void BeginPlay() override;
 
 private:
-	FString CurrentResult;
+    FString CurrentResult;
 
-	UPROPERTY()
-		UGTSceneCaptureComponent2D* SegmentationSceneCapture;
+    UPROPERTY()
+    UGTSceneCaptureComponent2D* SegmentationSceneCapture;
 
-	FGTImage CachedSegmentation;
+    FGTImage CachedSegmentation;
 
-	TMap<AActor*, FBox2D> CachedBoundingBoxes;
+    TMap<AActor*, FBox2D> CachedBoundingBoxes;
 
-	bool IsActorRenderedOnScreen(AActor* Actor, float DeltaTime);
+    bool IsActorRenderedOnScreen(AActor* Actor, float DeltaTime);
 
-	bool GetActorScreenBoundingBox(AActor* InActor, UGTImageGeneratorBase* ImageGeneratorComponent, FBox2D& OutBox);
+    bool GetActorScreenBoundingBox(
+        AActor* InActor,
+        UGTImageGeneratorBase* ImageGeneratorComponent,
+        FBox2D& OutBox);
 
-	FString Vector2DToFormattedString(const FVector2D& InVector);
+    FString Vector2DToFormattedString(const FVector2D& InVector);
 
-	FString Vector3DToFormattedString(const FVector& InVector);
+    FString Vector3DToFormattedString(const FVector& InVector);
 
-	FString RotatorToFormattedString(const FRotator& InRotator);
+    FString RotatorToFormattedString(const FRotator& InRotator);
 
-	FString Box2DToFormattedString(const FBox2D& InBox);
+    FString Box2DToFormattedString(const FBox2D& InBox);
 
-	FString Box3DToFormattedString(const FBox& InBox);
+    FString Box3DToFormattedString(const FBox& InBox);
 };
