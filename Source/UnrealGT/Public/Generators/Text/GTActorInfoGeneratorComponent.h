@@ -55,7 +55,7 @@ public:
      * **Therefore Requires "Enabled with stencil" in `Engine > Rendering > Postprocessing >
      * Custom-Depth Stencil Pass` to be set**
      *
-     * The additional render pas at least doubles the cost of creating the bounding boxes.
+     * The additional render pass doubles the cost of creating the bounding boxes.
      * The Larger the resolution of the LinkedGenerator the larger the performance hit.
      */
     UPROPERTY(EditAnywhere, Category = "Output Format")
