@@ -3,19 +3,24 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CoreStyle.h"
 #include "Framework/Commands/Commands.h"
+#include "Styling/CoreStyle.h"
 
-class UNREALGT_API FGTCommands : public TCommands<FGTCommands> {
+class UNREALGT_API FGTCommands : public TCommands<FGTCommands>
+{
 public:
-  FGTCommands()
-      : TCommands<FGTCommands>(
-            TEXT("Trainer"), NSLOCTEXT("Contexts", "Trainer", "Trainer Plugin"),
-            NAME_None, FCoreStyle::Get().GetStyleSetName()) {}
+    FGTCommands()
+        : TCommands<FGTCommands>(
+              TEXT("Trainer"),
+              NSLOCTEXT("Contexts", "Trainer", "Trainer Plugin"),
+              NAME_None,
+              FCoreStyle::Get().GetStyleSetName())
+    {
+    }
 
-  // TCommands<> interface
-  virtual void RegisterCommands() override;
+    // TCommands<> interface
+    virtual void RegisterCommands() override;
 
 public:
-  TSharedPtr<FUICommandInfo> OpenPluginWindow;
+    TSharedPtr<FUICommandInfo> OpenPluginWindow;
 };

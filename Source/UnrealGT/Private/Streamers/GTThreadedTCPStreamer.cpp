@@ -1,11 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GTThreadedTCPStreamer.h"
+#include "Streamers/GTThreadedTCPStreamer.h"
 
 #include <IPAddress.h>
 #include <SocketSubsystem.h>
 #include <Sockets.h>
-#include <RunnableThread.h>
 
 FGTThreadedTCPStreamer::FGTThreadedTCPStreamer(FString IPAddress, uint32 Port)
     : Socket(nullptr)
@@ -17,15 +16,15 @@ FGTThreadedTCPStreamer::FGTThreadedTCPStreamer(FString IPAddress, uint32 Port)
     Thread = FRunnableThread::Create(this, TEXT("TCPStreamerThread"));
 }
 
- FGTThreadedTCPStreamer::~FGTThreadedTCPStreamer()
+FGTThreadedTCPStreamer::~FGTThreadedTCPStreamer()
 {
-     if (Thread)
-     {
-         Thread->Kill(true);
-         delete Thread;
-         Thread = nullptr;
-     }
- }
+    if (Thread)
+    {
+        Thread->Kill(true);
+        delete Thread;
+        Thread = nullptr;
+    }
+}
 
 void FGTThreadedTCPStreamer::SendMessage(const TArray<uint8>& MessagePayload)
 {
@@ -55,8 +54,9 @@ uint32 FGTThreadedTCPStreamer::Run()
             int32 ByteCount = Data.Num();
             int32 TotalMessageLength = ByteCount + sizeof(ByteCount);
             // Little to Big Endian
-            int32 ByteCountBigEndian = (ByteCount & 0x000000FFU) << 24 | (ByteCount & 0x0000FF00U) << 8 | (ByteCount & 0x00FF0000U) >> 8 |
-                                       (ByteCount & 0xFF000000U) >> 24;
+            int32 ByteCountBigEndian =
+                (ByteCount & 0x000000FFU) << 24 | (ByteCount & 0x0000FF00U) << 8 |
+                (ByteCount & 0x00FF0000U) >> 8 | (ByteCount & 0xFF000000U) >> 24;
 
             uint8* Packet = (uint8*)FMemory::Malloc(TotalMessageLength);
             FMemory::Memcpy(Packet, &ByteCountBigEndian, sizeof(int32));
@@ -65,7 +65,8 @@ uint32 FGTThreadedTCPStreamer::Run()
             int32 TotalBytesSend = 0;
             while (TotalBytesSend != TotalMessageLength)
             {
-                Socket->Send(Packet + TotalBytesSend, TotalMessageLength - TotalBytesSend, BytesSend);
+                Socket->Send(
+                    Packet + TotalBytesSend, TotalMessageLength - TotalBytesSend, BytesSend);
                 if (BytesSend == -1)
                 {
                     bIsSocketConnected = false;
@@ -100,7 +101,7 @@ void FGTThreadedTCPStreamer::Exit()
 {
     if (Socket)
     {
-		ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
+        ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
     }
 }
 
@@ -108,8 +109,10 @@ bool FGTThreadedTCPStreamer::TryConnect()
 {
     if (!bIsSocketConnected || !Socket)
     {
-        Socket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("default"), false);
-        TSharedRef<FInternetAddr> InternetAddr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
+        Socket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)
+                     ->CreateSocket(NAME_Stream, TEXT("default"), false);
+        TSharedRef<FInternetAddr> InternetAddr =
+            ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
         bool bIsIPValid;
         InternetAddr->SetIp(*IPAddress, bIsIPValid);
         InternetAddr->SetPort(Port);

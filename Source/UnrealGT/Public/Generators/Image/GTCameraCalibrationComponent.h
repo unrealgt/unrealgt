@@ -9,7 +9,11 @@
 
 #include "GTCameraCalibrationComponent.generated.h"
 
-
+/**
+ * Can bes used to get calibration parameters from image generators.
+ * Set CameraOneReference to retrieve data for one camera.
+ * Set CameraOneReference and CameraTwoReference to generate stereo calibration parameters.
+ */
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREALGT_API UGTCameraCalibrationComponent : public UActorComponent
 {

@@ -1,13 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GTImageNormalGeneratorComponent.h"
+#include "Generators/Image/GTImageNormalGeneratorComponent.h"
 
-#include "GTSceneCaptureComponent2D.h"
-#include "GTImageGeneratorBase.h"
+#include "Generators/Image/GTSceneCaptureComponent2D.h"
 
 UGTImageNormalGeneratorComponent::UGTImageNormalGeneratorComponent()
     : Super()
 {
     SceneCaptureComponent->SetupWorldNormalPostProccess();
 }
-

@@ -1,18 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GTSimpleTCPStreamer.h"
+#include "Streamers/GTSimpleTCPStreamer.h"
 
-#include <SocketSubsystem.h>
-#include <Sockets.h>
-#include <IPAddress.h>
 #include <Engine/World.h>
-#include "GTThreadedTCPStreamer.h"
+
+#include "Streamers/GTThreadedTCPStreamer.h"
 
 UGTSimpleTCPStreamer::UGTSimpleTCPStreamer()
     : IPAddress("127.0.0.1")
     , Port(8999)
 {
-
 }
 
 void UGTSimpleTCPStreamer::OnComponentDestroyed(bool bDestroyingHierarchy)
@@ -37,4 +34,3 @@ void UGTSimpleTCPStreamer::OnDataReady(const TArray<uint8>& Data, const FDateTim
 {
     TCPStreamer->SendMessage(Data);
 }
-

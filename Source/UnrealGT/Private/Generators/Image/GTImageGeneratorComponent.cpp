@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GTImageGeneratorComponent.h"
+#include "Generators/Image/GTImageGeneratorComponent.h"
 
-#include "GTSceneCaptureComponent2D.h"
+#include "Generators/Image/GTSceneCaptureComponent2D.h"
 
 UGTImageGeneratorComponent::UGTImageGeneratorComponent()
     : Super()
@@ -22,7 +22,7 @@ void UGTImageGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
         SceneCaptureComponent->TargetGamma = FMath::FRandRange(TargetGamma, TargetGammaMax);
     }
 
-	Super::GenerateData(TimeStamp);
+    Super::GenerateData(TimeStamp);
 }
 
 void UGTImageGeneratorComponent::BeginPlay()

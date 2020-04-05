@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GTActorInfoGeneratorComponent.h"
+#include "Generators/Text/GTActorInfoGeneratorComponent.h"
 
 #include <CanvasItem.h>
 #include <CanvasTypes.h>
@@ -8,12 +8,11 @@
 #include <Components/StaticMeshComponent.h>
 #include <Engine/Engine.h>
 #include <Engine/StaticMesh.h>
-#include <EngineUtils.h>
 #include <Engine/TextureRenderTarget2D.h>
+#include <EngineUtils.h>
 
-#include "GTImageGeneratorBase.h"
-#include "GTSceneCaptureComponent2D.h"
-#include "GTSegmentationGeneratorComponent.h"
+#include "Generators/Image/GTImageGeneratorBase.h"
+#include "Generators/Image/GTSceneCaptureComponent2D.h"
 
 UGTActorInfoGeneratorComponent::UGTActorInfoGeneratorComponent()
     : Super()
@@ -31,7 +30,8 @@ UGTActorInfoGeneratorComponent::UGTActorInfoGeneratorComponent()
     , Format2DBoxString(TEXT("{Min} {Max} {Center} {Extent} {Width} {Height}"))
     , Format3DBoxString(TEXT("{Min} {Max} {Center} {Extent}"))
 {
-    SegmentationSceneCapture = CreateDefaultSubobject<UGTSceneCaptureComponent2D>(TEXT("InternalSegmentationSceneCapture"));
+    SegmentationSceneCapture = CreateDefaultSubobject<UGTSceneCaptureComponent2D>(
+        TEXT("InternalSegmentationSceneCapture"));
     SegmentationSceneCapture->SetupAttachment(this);
 }
 
@@ -41,9 +41,11 @@ void UGTActorInfoGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
     CachedBoundingBoxes.Empty();
     if (bAccurateBoundingBoxes && LinkedImageGenerator.GetComponent(GetOwner()))
     {
-        UGTImageGeneratorBase* LinkedImageGeneratorComponent = Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
+        UGTImageGeneratorBase* LinkedImageGeneratorComponent =
+            Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
 
-        SegmentationSceneCapture->SetResolution(LinkedImageGeneratorComponent->GetSceneCaptureComponent()->Resolution);
+        SegmentationSceneCapture->SetResolution(
+            LinkedImageGeneratorComponent->GetSceneCaptureComponent()->Resolution);
         SegmentationSceneCapture->CaptureImage(CachedSegmentation);
     }
 
@@ -57,12 +59,15 @@ void UGTActorInfoGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
         {
             if (ObjectFilter.MatchesActor(Actor))
             {
-                if (FVector::DistSquared2D(Actor->GetActorLocation(), GetComponentLocation()) <= MaxDistanceToCamera * MaxDistanceToCamera)
+                if (FVector::DistSquared2D(Actor->GetActorLocation(), GetComponentLocation()) <=
+                    MaxDistanceToCamera * MaxDistanceToCamera)
                 {
                     float RecentlyRenderedThreshold = 10.f;
-                    // TODO link this to timed capture tirgger or just disable render time based check
+                    // TODO link this to timed capture tirgger or just disable render time based
+                    // check
                     if (!bOnlyTrackRecentlyRenderedActors ||
-                        (bOnlyTrackRecentlyRenderedActors && IsActorRenderedOnScreen(Actor, RecentlyRenderedThreshold)))
+                        (bOnlyTrackRecentlyRenderedActors &&
+                         IsActorRenderedOnScreen(Actor, RecentlyRenderedThreshold)))
                     {
                         TrackedActors.Push(Actor);
                     }
@@ -78,7 +83,8 @@ void UGTActorInfoGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
 
     for (AActor* TrackedActor : TrackedActors)
     {
-        UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(TrackedActor->GetComponentByClass(UStaticMeshComponent::StaticClass()));
+        UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(
+            TrackedActor->GetComponentByClass(UStaticMeshComponent::StaticClass()));
 
         FString MeshName(TEXT("NOMESHONTHISACTOR"));
         if (MeshComp)
@@ -86,7 +92,8 @@ void UGTActorInfoGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
             MeshComp->GetStaticMesh()->GetName(MeshName);
         }
 
-        UGTImageGeneratorBase* LinkedImageGeneratorComponent = Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
+        UGTImageGeneratorBase* LinkedImageGeneratorComponent =
+            Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
 
         // Screen Location
         FVector2D ScreenLocation(-1.f, -1.f);
@@ -95,17 +102,22 @@ void UGTActorInfoGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
         FBox2D ScreenBoundingBoxNormalized;
         if (LinkedImageGeneratorComponent)
         {
-            LinkedImageGeneratorComponent->GetSceneCaptureComponent()->ProjectToPixelLocation(TrackedActor->GetActorLocation(),
-                                                                                              ScreenLocation);
+            LinkedImageGeneratorComponent->GetSceneCaptureComponent()->ProjectToPixelLocation(
+                TrackedActor->GetActorLocation(), ScreenLocation);
 
-            ScreenLocationNormalized = LinkedImageGeneratorComponent->GetSceneCaptureComponent()->NormalizePixelLocation(ScreenLocation);
+            ScreenLocationNormalized =
+                LinkedImageGeneratorComponent->GetSceneCaptureComponent()->NormalizePixelLocation(
+                    ScreenLocation);
 
-            GetActorScreenBoundingBox(TrackedActor, LinkedImageGeneratorComponent, ScreenBoundingBox);
+            GetActorScreenBoundingBox(
+                TrackedActor, LinkedImageGeneratorComponent, ScreenBoundingBox);
 
             ScreenBoundingBoxNormalized.Min =
-                LinkedImageGeneratorComponent->GetSceneCaptureComponent()->NormalizePixelLocation(ScreenBoundingBox.Min);
+                LinkedImageGeneratorComponent->GetSceneCaptureComponent()->NormalizePixelLocation(
+                    ScreenBoundingBox.Min);
             ScreenBoundingBoxNormalized.Max =
-                LinkedImageGeneratorComponent->GetSceneCaptureComponent()->NormalizePixelLocation(ScreenBoundingBox.Max);
+                LinkedImageGeneratorComponent->GetSceneCaptureComponent()->NormalizePixelLocation(
+                    ScreenBoundingBox.Max);
         }
 
         TMap<FString, FStringFormatArg> GlobalProperties{
@@ -114,7 +126,8 @@ void UGTActorInfoGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
             {TEXT("ScreenLocation"), Vector2DToFormattedString(ScreenLocation)},
             {TEXT("ScreenLocationNormalized"), Vector2DToFormattedString(ScreenLocationNormalized)},
             {TEXT("ScreenBoundingBox"), Box2DToFormattedString(ScreenBoundingBox)},
-            {TEXT("ScreenBoundingBoxNormalized"), Box2DToFormattedString(ScreenBoundingBoxNormalized)},
+            {TEXT("ScreenBoundingBoxNormalized"),
+             Box2DToFormattedString(ScreenBoundingBoxNormalized)},
             {TEXT("ActorName"), TrackedActor->GetName()},
             {TEXT("MeshName"), MeshName}};
 
@@ -122,7 +135,8 @@ void UGTActorInfoGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
 
         for (const TPair<FString, FString>& ReplacePair : ReplaceStrings)
         {
-            ActorResult.ReplaceInline(*ReplacePair.Key, *ReplacePair.Value, ESearchCase::CaseSensitive);
+            ActorResult.ReplaceInline(
+                *ReplacePair.Key, *ReplacePair.Value, ESearchCase::CaseSensitive);
         }
 
         Result.Append(ActorResult);
@@ -155,16 +169,19 @@ void UGTActorInfoGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Can
     if (LinkedImageGenerator.GetComponent(GetOwner()))
     {
         // Draw boundingboxes
-        UGTImageGeneratorBase* LinkedImageGeneratorComponent = Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
+        UGTImageGeneratorBase* LinkedImageGeneratorComponent =
+            Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
 
-        UTextureRenderTarget2D* LinkedImageTextureTarget = LinkedImageGeneratorComponent->GetSceneCaptureComponent()->TextureTarget;
+        UTextureRenderTarget2D* LinkedImageTextureTarget =
+            LinkedImageGeneratorComponent->GetSceneCaptureComponent()->TextureTarget;
         FTexture* LinkedImageTextureResource = LinkedImageTextureTarget->Resource;
-        FCanvasTileItem LinkedImageItem(FVector2D(0.f, 0.f),
-                                        LinkedImageTextureResource,
-                                        FVector2D(LinkedImageTextureTarget->SizeX, LinkedImageTextureTarget->SizeY),
-                                        FVector2D::ZeroVector,
-                                        FVector2D::ZeroVector + FVector2D(1.f, 1.f),
-                                        FLinearColor::White);
+        FCanvasTileItem LinkedImageItem(
+            FVector2D(0.f, 0.f),
+            LinkedImageTextureResource,
+            FVector2D(LinkedImageTextureTarget->SizeX, LinkedImageTextureTarget->SizeY),
+            FVector2D::ZeroVector,
+            FVector2D::ZeroVector + FVector2D(1.f, 1.f),
+            FLinearColor::White);
         LinkedImageItem.Rotation = FRotator(0.f, 0.f, 0.f);
         LinkedImageItem.PivotPoint = FVector2D(0.5f, 0.5f);
         LinkedImageItem.BlendMode = FCanvas::BlendToSimpleElementBlend(EBlendMode::BLEND_Opaque);
@@ -173,7 +190,9 @@ void UGTActorInfoGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Can
         {
             // we need to add 1 because the canvas box item draws around the specified coords?????
             FVector2D VectorOffset(1.f, 1.f);
-            FCanvasBoxItem BoxItem(ActorBoundingBoxPair.Value.Min + VectorOffset, ActorBoundingBoxPair.Value.GetSize());
+            FCanvasBoxItem BoxItem(
+                ActorBoundingBoxPair.Value.Min + VectorOffset,
+                ActorBoundingBoxPair.Value.GetSize());
             BoxItem.SetColor(FColor::Red);
             BoxItem.LineThickness = 1.f;
             Canvas->DrawItem(BoxItem);
@@ -186,42 +205,47 @@ void UGTActorInfoGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Can
                 SegmentationSceneCapture->TextureTarget->IsValidLowLevel())
             {
                 // Draw segmetnation
-                UTextureRenderTarget2D* SegmentationTextureTarget = SegmentationSceneCapture->TextureTarget;
+                UTextureRenderTarget2D* SegmentationTextureTarget =
+                    SegmentationSceneCapture->TextureTarget;
                 FTexture* SegmentationResource = SegmentationTextureTarget->Resource;
-                FCanvasTileItem SegmentationItem(FVector2D(LinkedImageItem.Size.X, 0.f),
-                                                 SegmentationResource,
-                                                 FVector2D(SegmentationTextureTarget->SizeX, SegmentationTextureTarget->SizeY),
-                                                 FVector2D::ZeroVector,
-                                                 FVector2D::ZeroVector + FVector2D(1.f, 1.f),
-                                                 FLinearColor::White);
+                FCanvasTileItem SegmentationItem(
+                    FVector2D(LinkedImageItem.Size.X, 0.f),
+                    SegmentationResource,
+                    FVector2D(SegmentationTextureTarget->SizeX, SegmentationTextureTarget->SizeY),
+                    FVector2D::ZeroVector,
+                    FVector2D::ZeroVector + FVector2D(1.f, 1.f),
+                    FLinearColor::White);
                 SegmentationItem.Rotation = FRotator(0.f, 0.f, 0.f);
                 SegmentationItem.PivotPoint = FVector2D(0.5f, 0.5f);
-                SegmentationItem.BlendMode = FCanvas::BlendToSimpleElementBlend(EBlendMode::BLEND_Opaque);
+                SegmentationItem.BlendMode =
+                    FCanvas::BlendToSimpleElementBlend(EBlendMode::BLEND_Opaque);
                 Canvas->DrawItem(SegmentationItem);
 
                 // Draw colormap
                 UTexture2D* ColorMap = SegmentationSceneCapture->ColorMap;
                 FTexture* ColorMapResource = ColorMap->Resource;
-                FCanvasTileItem ColorMapItem(FVector2D(0.f, SegmentationItem.Size.Y),
-                                             ColorMapResource,
-                                             FVector2D(ColorMapResource->GetSizeX(), ColorMapResource->GetSizeY() * 8.f),
-                                             FVector2D::ZeroVector,
-                                             FVector2D::ZeroVector + FVector2D(1.f, 1.f),
-                                             FLinearColor::White);
+                FCanvasTileItem ColorMapItem(
+                    FVector2D(0.f, SegmentationItem.Size.Y),
+                    ColorMapResource,
+                    FVector2D(ColorMapResource->GetSizeX(), ColorMapResource->GetSizeY() * 8.f),
+                    FVector2D::ZeroVector,
+                    FVector2D::ZeroVector + FVector2D(1.f, 1.f),
+                    FLinearColor::White);
                 ColorMapItem.Rotation = FRotator(0.f, 0.f, 0.f);
                 ColorMapItem.PivotPoint = FVector2D(0.5f, 0.5f);
-                ColorMapItem.BlendMode = FCanvas::BlendToSimpleElementBlend(EBlendMode::BLEND_Opaque);
+                ColorMapItem.BlendMode =
+                    FCanvas::BlendToSimpleElementBlend(EBlendMode::BLEND_Opaque);
                 Canvas->DrawItem(ColorMapItem);
                 TextOffset += ColorMapItem.Size.Y;
             }
         }
-
     }
 
-    FCanvasTextItem TextItem(FVector2D(0.f, TextOffset),
-                             FText::FromString(CurrentResult),
-                             GEngine->GetMediumFont(),
-                             FLinearColor::Red);
+    FCanvasTextItem TextItem(
+        FVector2D(0.f, TextOffset),
+        FText::FromString(CurrentResult),
+        GEngine->GetMediumFont(),
+        FLinearColor::Red);
     Canvas->DrawItem(TextItem);
 }
 
@@ -231,29 +255,33 @@ void UGTActorInfoGeneratorComponent::BeginPlay()
 
     if (bAccurateBoundingBoxes && LinkedImageGenerator.GetComponent(GetOwner()))
     {
-        UGTImageGeneratorBase* LinkedImageGeneratorComponent = Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
+        UGTImageGeneratorBase* LinkedImageGeneratorComponent =
+            Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
 
-        SegmentationSceneCapture->SetResolution(LinkedImageGeneratorComponent->GetSceneCaptureComponent()->Resolution);
-        SegmentationSceneCapture->SetupSegmentationPostProccess(TrackActorsThatMatchFilter, bShouldApplyCloseMorph);
+        SegmentationSceneCapture->SetResolution(
+            LinkedImageGeneratorComponent->GetSceneCaptureComponent()->Resolution);
+        SegmentationSceneCapture->SetupSegmentationPostProccess(
+            TrackActorsThatMatchFilter, bShouldApplyCloseMorph);
     }
 }
 
 bool UGTActorInfoGeneratorComponent::IsActorRenderedOnScreen(AActor* Actor, float DeltaTime)
 {
     // TODO
-    //float ActorLastRenderTimeOnScreen = -10000.f;
-    //for (const UActorComponent* ActorComponent : Actor->GetComponents())
+    // float ActorLastRenderTimeOnScreen = -10000.f;
+    // for (const UActorComponent* ActorComponent : Actor->GetComponents())
     //{
     //    const UPrimitiveComponent* PrimComp = Cast<const UPrimitiveComponent>(ActorComponent);
     //    if (PrimComp && PrimComp->IsRegistered())
     //    {
-    //        ActorLastRenderTimeOnScreen = FMath::Max(ActorLastRenderTimeOnScreen, PrimComp->LastRenderTimeOnScreen);
+    //        ActorLastRenderTimeOnScreen = FMath::Max(ActorLastRenderTimeOnScreen,
+    //        PrimComp->LastRenderTimeOnScreen);
     //    }
     //}
 
-    //UWorld* World = GetWorld();
+    // UWorld* World = GetWorld();
 
-    //if (!World || ActorLastRenderTimeOnScreen <= 0.f)
+    // if (!World || ActorLastRenderTimeOnScreen <= 0.f)
     //{
     //    return false;
     //}
@@ -262,7 +290,8 @@ bool UGTActorInfoGeneratorComponent::IsActorRenderedOnScreen(AActor* Actor, floa
 
     if (Difference <= 0.05f && bOnlyTrackOnScreenActors)
     {
-        UGTImageGeneratorBase* LinkedImageGeneratorComponent = Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
+        UGTImageGeneratorBase* LinkedImageGeneratorComponent =
+            Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
         if (LinkedImageGeneratorComponent)
         {
             if (!MinimalRequiredBoundingBoxSize.IsZero())
@@ -317,7 +346,9 @@ bool UGTActorInfoGeneratorComponent::IsActorRenderedOnScreen(AActor* Actor, floa
             //{
             //    bool bHit = GetWorld()->LineTraceSingleByChannel(OutHit,
             //                                                     LinkedImageGeneratorComponent->GetComponentLocation(),
-            //                                                     ActorCenter + TestPoints[TestPointItr] * ActorExtent,
+            //                                                     ActorCenter +
+            //                                                     TestPoints[TestPointItr] *
+            //                                                     ActorExtent,
             //                                                     ECollisionChannel::ECC_Visibility,
             //                                                     CollisionParams);
 
@@ -342,9 +373,10 @@ bool UGTActorInfoGeneratorComponent::IsActorRenderedOnScreen(AActor* Actor, floa
     }
 }
 
-bool UGTActorInfoGeneratorComponent::GetActorScreenBoundingBox(AActor* InActor,
-                                                               UGTImageGeneratorBase* ImageGeneratorComponent,
-                                                               FBox2D& OutBox)
+bool UGTActorInfoGeneratorComponent::GetActorScreenBoundingBox(
+    AActor* InActor,
+    UGTImageGeneratorBase* ImageGeneratorComponent,
+    FBox2D& OutBox)
 {
     if (CachedBoundingBoxes.Contains(InActor))
     {
@@ -370,8 +402,10 @@ bool UGTActorInfoGeneratorComponent::GetActorScreenBoundingBox(AActor* InActor,
     {
         FVector2D ProjectedWorldLocation;
 
-        bool bValidPixelLocation = ImageGeneratorComponent->GetSceneCaptureComponent()->ProjectToPixelLocation(
-            ActorCenter + (BoundsPointMapping[BoundsPointItr] * ActorExtent), ProjectedWorldLocation);
+        bool bValidPixelLocation =
+            ImageGeneratorComponent->GetSceneCaptureComponent()->ProjectToPixelLocation(
+                ActorCenter + (BoundsPointMapping[BoundsPointItr] * ActorExtent),
+                ProjectedWorldLocation);
 
         if (bValidPixelLocation)
         {
@@ -383,7 +417,8 @@ bool UGTActorInfoGeneratorComponent::GetActorScreenBoundingBox(AActor* InActor,
     {
         FBox2D AccurateScreenBoundingBox(EForceInit::ForceInitToZero);
 
-        TArray<FColor> SegmentColors = SegmentationSceneCapture->GetSegmentColorsUsedForActor(InActor);
+        TArray<FColor> SegmentColors =
+            SegmentationSceneCapture->GetSegmentColorsUsedForActor(InActor);
         int TotalPixelOverlap = 0;
         for (const FColor& SegmentColor : SegmentColors)
         {
@@ -419,36 +454,44 @@ bool UGTActorInfoGeneratorComponent::GetActorScreenBoundingBox(AActor* InActor,
 
 FString UGTActorInfoGeneratorComponent::Vector2DToFormattedString(const FVector2D& InVector)
 {
-    return FString::Format(*FormatVector2DString, {{TEXT("X"), InVector.X}, {TEXT("Y"), InVector.Y}});
+    return FString::Format(
+        *FormatVector2DString, {{TEXT("X"), InVector.X}, {TEXT("Y"), InVector.Y}});
 }
 
 FString UGTActorInfoGeneratorComponent::Vector3DToFormattedString(const FVector& InVector)
 {
-    return FString::Format(*FormatVector3DString, {{TEXT("X"), InVector.X}, {TEXT("Y"), InVector.Y}, {TEXT("Z"), InVector.Z}});
+    return FString::Format(
+        *FormatVector3DString,
+        {{TEXT("X"), InVector.X}, {TEXT("Y"), InVector.Y}, {TEXT("Z"), InVector.Z}});
 }
 
 FString UGTActorInfoGeneratorComponent::RotatorToFormattedString(const FRotator& InRotator)
 {
-    return FString::Format(*FormatRotatorString,
-                           {{TEXT("Yaw"), InRotator.Yaw}, {TEXT("Pitch"), InRotator.Pitch}, {TEXT("Roll"), InRotator.Roll}});
+    return FString::Format(
+        *FormatRotatorString,
+        {{TEXT("Yaw"), InRotator.Yaw},
+         {TEXT("Pitch"), InRotator.Pitch},
+         {TEXT("Roll"), InRotator.Roll}});
 }
 
 FString UGTActorInfoGeneratorComponent::Box2DToFormattedString(const FBox2D& InBox)
 {
-    return FString::Format(*Format2DBoxString,
-                           {{TEXT("Min"), Vector2DToFormattedString(InBox.Min)},
-                            {TEXT("Max"), Vector2DToFormattedString(InBox.Max)},
-                            {TEXT("Width"), InBox.GetSize().X},
-                            {TEXT("Height"), InBox.GetSize().Y},
-                            {TEXT("Center"), Vector2DToFormattedString(InBox.GetCenter())},
-                            {TEXT("Extent"), Vector2DToFormattedString(InBox.GetExtent())}});
+    return FString::Format(
+        *Format2DBoxString,
+        {{TEXT("Min"), Vector2DToFormattedString(InBox.Min)},
+         {TEXT("Max"), Vector2DToFormattedString(InBox.Max)},
+         {TEXT("Width"), InBox.GetSize().X},
+         {TEXT("Height"), InBox.GetSize().Y},
+         {TEXT("Center"), Vector2DToFormattedString(InBox.GetCenter())},
+         {TEXT("Extent"), Vector2DToFormattedString(InBox.GetExtent())}});
 }
 
 FString UGTActorInfoGeneratorComponent::Box3DToFormattedString(const FBox& InBox)
 {
-    return FString::Format(*Format3DBoxString,
-                           {{TEXT("Min"), Vector3DToFormattedString(InBox.Min)},
-                            {TEXT("Max"), Vector3DToFormattedString(InBox.Max)},
-                            {TEXT("Center"), Vector3DToFormattedString(InBox.GetCenter())},
-                            {TEXT("Extent"), Vector3DToFormattedString(InBox.GetExtent())}});
+    return FString::Format(
+        *Format3DBoxString,
+        {{TEXT("Min"), Vector3DToFormattedString(InBox.Min)},
+         {TEXT("Max"), Vector3DToFormattedString(InBox.Max)},
+         {TEXT("Center"), Vector3DToFormattedString(InBox.GetCenter())},
+         {TEXT("Extent"), Vector3DToFormattedString(InBox.GetExtent())}});
 }

@@ -1,17 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GTAsyncMakeImageTask.h"
+#include "Streamers/GTAsyncMakeImageTask.h"
 
+#include "Async/Async.h"
+#include "Modules/ModuleManager.h"
+#include "Serialization/MemoryWriter.h"
 #include <IImageWrapper.h>
 #include <IImageWrapperModule.h>
-#include <MemoryWriter.h>
-#include <ModuleManager.h>
-#include "GTImageGeneratorBase.h"
-#include <Async.h>
 
-FGTAsyncMakeImageTask::FGTAsyncMakeImageTask(UGTImageGeneratorBase* SourceComponent,
-                                             const FGTImage& Image,
-                                             EGTImageFileFormat ImageFormat, bool bWriteAlpha, FDateTime TimeStamp)
+#include "Generators/Image/GTImageGeneratorBase.h"
+
+FGTAsyncMakeImageTask::FGTAsyncMakeImageTask(
+    UGTImageGeneratorBase* SourceComponent,
+    const FGTImage& Image,
+    EGTImageFileFormat ImageFormat,
+    bool bWriteAlpha,
+    FDateTime TimeStamp)
     : SourceComponent(SourceComponent)
     , Image(Image)
     , ImageFormat(ImageFormat)
@@ -23,36 +27,46 @@ FGTAsyncMakeImageTask::FGTAsyncMakeImageTask(UGTImageGeneratorBase* SourceCompon
 
 void FGTAsyncMakeImageTask::DoWork()
 {
-    IImageWrapperModule& ImageWrapperModule = FModuleManager::GetModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+    IImageWrapperModule& ImageWrapperModule =
+        FModuleManager::GetModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
     TArray<uint8> ImgData;
     switch (ImageFormat)
     {
         case EGTImageFileFormat::PNG:
         {
-            TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
-            ImageWrapper->SetRaw(Image.Pixels.GetData(), Image.Pixels.GetAllocatedSize(), Image.Width, Image.Height, ERGBFormat::BGRA, 8);
+            TSharedPtr<IImageWrapper> ImageWrapper =
+                ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
+            ImageWrapper->SetRaw(
+                Image.Pixels.GetData(),
+                Image.Pixels.GetAllocatedSize(),
+                Image.Width,
+                Image.Height,
+                ERGBFormat::BGRA,
+                8);
             ImgData = ImageWrapper->GetCompressed(100);
             break;
         }
         case EGTImageFileFormat::BMP:
         {
-            //TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::BMP);
-            //ImageWrapper->SetRaw(Image.Pixels.GetData(), Image.Pixels.GetAllocatedSize(), Image.Width, Image.Height, ERGBFormat::BGRA, 8);
-            //ImgData = ImageWrapper->GetCompressed(100);
+            // TSharedPtr<IImageWrapper> ImageWrapper =
+            // ImageWrapperModule.CreateImageWrapper(EImageFormat::BMP);
+            // ImageWrapper->SetRaw(Image.Pixels.GetData(), Image.Pixels.GetAllocatedSize(),
+            // Image.Width, Image.Height, ERGBFormat::BGRA, 8); ImgData =
+            // ImageWrapper->GetCompressed(100);
 
             // bitmap support in imagewrapper is buggy
             int Width = Image.Width;
             int Height = Image.Height;
 
             FColor* Data = Image.Pixels.GetData();
-            
-			// TODO configure?
+
+            // TODO configure?
             FIntRect SubRectangle(0, 0, Width, Height);
-            
+
             FMemoryWriter Ar(ImgData);
-            
+
 #if PLATFORM_SUPPORTS_PRAGMA_PACK
-            #pragma pack(push, 1)
+#pragma pack(push, 1)
 #endif
             struct BITMAPFILEHEADER
             {
@@ -91,22 +105,24 @@ void FGTAsyncMakeImageTask::DoWork()
                 uint32 bV4GammaBlue GCC_PACK(1);
             } IHV4;
 #if PLATFORM_SUPPORTS_PRAGMA_PACK
-            #pragma pack(pop)
+#pragma pack(pop)
 #endif
-            
+
             uint32 BytesPerPixel = bWriteAlpha ? 4 : 3;
             uint32 BytesPerLine = Align(Width * BytesPerPixel, 4);
-            
-            uint32 InfoHeaderSize = sizeof(BITMAPINFOHEADER) + (bWriteAlpha ? sizeof(BITMAPV4HEADER) : 0);
-            
+
+            uint32 InfoHeaderSize =
+                sizeof(BITMAPINFOHEADER) + (bWriteAlpha ? sizeof(BITMAPV4HEADER) : 0);
+
             // File header.
             FH.bfType = INTEL_ORDER16((uint16)('B' + 256 * 'M'));
-            FH.bfSize = INTEL_ORDER32((uint32)(sizeof(BITMAPFILEHEADER) + InfoHeaderSize + BytesPerLine * Height));
+            FH.bfSize = INTEL_ORDER32(
+                (uint32)(sizeof(BITMAPFILEHEADER) + InfoHeaderSize + BytesPerLine * Height));
             FH.bfReserved1 = INTEL_ORDER16((uint16)0);
             FH.bfReserved2 = INTEL_ORDER16((uint16)0);
             FH.bfOffBits = INTEL_ORDER32((uint32)(sizeof(BITMAPFILEHEADER) + InfoHeaderSize));
             Ar.Serialize(&FH, sizeof(FH));
-            
+
             // Info header.
             IH.biSize = INTEL_ORDER32((uint32)InfoHeaderSize);
             IH.biWidth = INTEL_ORDER32((uint32)Width);
@@ -127,7 +143,7 @@ void FGTAsyncMakeImageTask::DoWork()
             IH.biClrUsed = INTEL_ORDER32((uint32)0);
             IH.biClrImportant = INTEL_ORDER32((uint32)0);
             Ar.Serialize(&IH, sizeof(IH));
-            
+
             // If we're writing alpha, we need to write the extra portion of the V4 header
             if (bWriteAlpha)
             {
@@ -141,7 +157,7 @@ void FGTAsyncMakeImageTask::DoWork()
                 IHV4.bV4GammaBlue = INTEL_ORDER32((uint32)0);
                 Ar.Serialize(&IHV4, sizeof(IHV4));
             }
-            
+
             // Colors.
             for (int32 i = SubRectangle.Max.Y - 1; i >= SubRectangle.Min.Y; i--)
             {
@@ -150,15 +166,15 @@ void FGTAsyncMakeImageTask::DoWork()
                     Ar.Serialize((void*)&Data[i * Width + j].B, 1);
                     Ar.Serialize((void*)&Data[i * Width + j].G, 1);
                     Ar.Serialize((void*)&Data[i * Width + j].R, 1);
-            
+
                     if (bWriteAlpha)
                     {
                         Ar.Serialize((void*)&Data[i * Width + j].A, 1);
                     }
                 }
-            
+
                 // Pad each row's length to be a multiple of 4 bytes.
-            
+
                 for (uint32 PadIndex = Width * BytesPerPixel; PadIndex < BytesPerLine; PadIndex++)
                 {
                     uint8 B = 0;
@@ -173,14 +189,14 @@ void FGTAsyncMakeImageTask::DoWork()
     FDateTime TimeStamptLocal = TimeStamp;
 
     // TODO figure out if we can pass ImgData by ref
-    // probably not because this thread could be dead by the time the lambda is called on the gamethread
+    // probably not because this thread could be dead by the time the lambda is called on the
+    // gamethread
     AsyncTask(ENamedThreads::GameThread, [SourceComponentLocal, ImgData, TimeStamptLocal]() {
         if (SourceComponentLocal && SourceComponentLocal->IsValidLowLevelFast())
         {
             SourceComponentLocal->DataReadyDelegate.Broadcast(ImgData, TimeStamptLocal);
         }
     });
-
 }
 
 TStatId FGTAsyncMakeImageTask::GetStatId() const

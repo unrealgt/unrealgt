@@ -2,41 +2,42 @@
 
 #pragma once
 
+#include "Containers/Queue.h"
 #include "CoreMinimal.h"
 #include "HAL/Runnable.h"
-#include <Queue.h>
 
 class FSocket;
 
 /**
  *
  */
-class UNREALGT_API FGTThreadedTCPStreamer : public FRunnable {
+class UNREALGT_API FGTThreadedTCPStreamer : public FRunnable
+{
 public:
-  FGTThreadedTCPStreamer(FString IPAddress, uint32 Port);
+    FGTThreadedTCPStreamer(FString IPAddress, uint32 Port);
 
-  ~FGTThreadedTCPStreamer();
+    ~FGTThreadedTCPStreamer();
 
-  void SendMessage(const TArray<uint8> &MessagePayload);
+    void SendMessage(const TArray<uint8>& MessagePayload);
 
-  bool Init() override;
-  uint32 Run() override;
-  void Stop() override;
-  void Exit() override;
+    bool Init() override;
+    uint32 Run() override;
+    void Stop() override;
+    void Exit() override;
 
 private:
-  FSocket *Socket;
+    FSocket* Socket;
 
-  FString IPAddress;
-  uint32 Port;
+    FString IPAddress;
+    uint32 Port;
 
-  bool bIsSocketConnected;
+    bool bIsSocketConnected;
 
-  bool bShouldStop;
+    bool bShouldStop;
 
-  TQueue<TArray<uint8>, EQueueMode::Mpsc> MessageRequests;
+    TQueue<TArray<uint8>, EQueueMode::Mpsc> MessageRequests;
 
-  FRunnableThread *Thread;
+    FRunnableThread* Thread;
 
-  bool TryConnect();
+    bool TryConnect();
 };

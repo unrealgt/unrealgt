@@ -1,9 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GTHttpStreamerComponent.h"
+#include "Streamers/GTHttpStreamerComponent.h"
 
 #include "Json.h"
-#include "JsonUtilities.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 
 UGTHttpStreamerComponent::UGTHttpStreamerComponent()
