@@ -4,11 +4,11 @@
 
 #include "Components/SceneCaptureComponent2D.h"
 #include "CoreMinimal.h"
+#include <Engine/Texture.h>
 #include <Materials/MaterialInstance.h>
 
 #include "GTImage.h"
 #include "GTObjectFilter.h"
-#include <Engine/Texture.h>
 
 #include "GTSceneCaptureComponent2D.generated.h"
 
@@ -54,11 +54,16 @@ public:
 
     UTexture2D* TextureFromImage(const FGTImage& Image, bool bIsLookupTable = false);
 
-    void SetupSegmentationPostProccess(const TMap<FGTObjectFilter, FColor>& ComponentFilterToColor,
-                                       bool bColorEachComponentDifferent = false,
-                                       bool bShouldApplyCloseMorph = false);
+    void SetupSegmentationPostProccess(
+        const TMap<FGTObjectFilter, FColor>& ComponentFilterToColor,
+        bool bShouldApplyCloseMorph = false,
+        bool bColorEachComponentDifferent = false,
+        bool bUseFilterForColorEachComponentDifferent = false,
+        const FGTObjectFilter& ColorEachComponentDifferentFilter = FGTObjectFilter());
 
-    void SetupSegmentationPostProccess(const TArray<FGTObjectFilter>& ComponentFilters, bool bShouldApplyCloseMorph = false);
+    void SetupSegmentationPostProccess(
+        const TArray<FGTObjectFilter>& ComponentFilters,
+        bool bShouldApplyCloseMorph = false);
 
     TArray<FColor> GetSegmentColorsUsedForActor(AActor* Actor);
 
@@ -80,6 +85,8 @@ private:
 public:
     UPROPERTY()
     UTexture2D* ColorMap;
+
+    TMap<UPrimitiveComponent*, FColor> ComponentToColor;
 
 private:
     UPROPERTY()

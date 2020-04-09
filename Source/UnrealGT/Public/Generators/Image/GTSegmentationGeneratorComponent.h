@@ -16,6 +16,11 @@ class UGTSceneCaptureComponent2D;
  * pair to the ComponentToColor map.
  * **Requires "Enabled with stencil" project setting in `Engine > Rendering > Postprocessing >
  * Custom-Depth Stencil Pass`**
+ *
+ * Will emit a JSON file containing the configured color mappings
+ * called "segmentation_info" in `Saved/UnrealGT/{SessionName}/{Time}/{SegmentationGeneratorName}`
+ *
+ * **Note:** Anti-Aliasing is disabled for segmentation generators by default!
  */
 UCLASS(
     ClassGroup = (Custom),
@@ -31,12 +36,46 @@ protected:
     virtual void BeginPlay() override;
 
 private:
-    UPROPERTY(EditAnyWhere, Category = Segmentaiton)
+    /**
+     * Assigns a segmentation color to the component/mesh if it matches the corresponding filter.
+     */
+    UPROPERTY(
+        EditAnyWhere,
+        Category = Segmentation,
+        Meta =
+            (DisplayName = "Component to color Map (limted to 255 colors)",
+             EditCondition = "!bColorEachComponentDifferent"))
     TMap<FGTObjectFilter, FColor> ComponentToColor;
+
+    /**
+     * This can improve segmentation quality for partially translucent meshes (e.g. Fences, Foliage...)
+     */
+    UPROPERTY(
+        EditAnyWhere,
+        Category = Segmentation,
+        Meta = (DisplayName = "Apply Closing (Dilation & Erosion)"))
+    bool bShouldApplyCloseMorph;
 
     UPROPERTY(
         EditAnyWhere,
-        Category = Segmentaiton,
-        Meta = (DisplayName = "Apply Closing (Dilation & Erosion)"))
-    bool bShouldApplyCloseMorph;
+        Category = Segmentation,
+        Meta = (DisplayName = "Use random color for every mesh (limited to 255 colors)"))
+    bool bColorEachComponentDifferent;
+
+    UPROPERTY(
+        EditAnyWhere,
+        Category = Segmentation,
+        Meta =
+            (DisplayName = "Apply random color only to components that match filter",
+             EditCondition = "bColorEachComponentDifferent"))
+    bool bUseFilterForColorEachComponentDifferent;
+
+    UPROPERTY(
+        EditAnyWhere,
+        Category = Segmentation,
+        Meta =
+            (DisplayName = "Component filter for random colors",
+             EditCondition =
+                 "bColorEachComponentDifferent && bUseFilterForColorEachComponentDifferent"))
+    FGTObjectFilter ColorEachComponentDifferentFilter;
 };

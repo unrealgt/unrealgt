@@ -11,30 +11,32 @@
 class FGTThreadedTCPStreamer;
 
 /**
- *
+ * Example: https://github.com/unrealgt/unrealgt/tree/master/Examples/PythonTCPClient
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent),
-       hidecategories = (Collision, Object, Physics, SceneComponent))
-class UNREALGT_API UGTSimpleTCPStreamer : public UGTDataStreamerComponent {
-  GENERATED_BODY()
+UCLASS(
+    ClassGroup = (Custom),
+    meta = (BlueprintSpawnableComponent),
+    hidecategories = (Collision, Object, Physics, SceneComponent))
+class UNREALGT_API UGTSimpleTCPStreamer : public UGTDataStreamerComponent
+{
+    GENERATED_BODY()
 
 public:
-  UGTSimpleTCPStreamer();
+    UGTSimpleTCPStreamer();
 
-  virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+    virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
 protected:
-  virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
 
-  virtual void OnDataReady(const TArray<uint8> &Data,
-                           const FDateTime &TimeStamp) override;
+    virtual void OnDataReady(const TArray<uint8>& Data, const FDateTime& TimeStamp) override;
 
 private:
-  UPROPERTY(EditAnywhere)
-  FString IPAddress;
+    UPROPERTY(EditAnywhere)
+    FString IPAddress;
 
-  UPROPERTY(EditAnywhere)
-  uint32 Port;
+    UPROPERTY(EditAnywhere)
+    uint32 Port;
 
-  FGTThreadedTCPStreamer *TCPStreamer;
+    FGTThreadedTCPStreamer* TCPStreamer;
 };
