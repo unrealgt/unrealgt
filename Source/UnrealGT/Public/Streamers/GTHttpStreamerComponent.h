@@ -9,42 +9,46 @@
 #include "GTHttpStreamerComponent.generated.h"
 
 UENUM(BlueprintType)
-enum class EGTHttpMethod : uint8 {
-  Post,
-  Put,
+enum class EGTHttpMethod : uint8
+{
+    Post,
+    Put,
 };
 
 UENUM(BlueprintType)
-enum class EGTHttpContentType : uint8 {
-  Json,
-  PNG,
-  BMP,
-  TextPlain,
-  OctetStream
+enum class EGTHttpContentType : uint8
+{
+    Json,
+    PNG,
+    BMP,
+    TextPlain,
+    OctetStream
 };
 
 /**
- *
+ * Example: https://github.com/unrealgt/unrealgt/tree/master/Examples/PythonHTTPClient
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent),
-       hidecategories = (Collision, Object, Physics, SceneComponent))
-class UNREALGT_API UGTHttpStreamerComponent : public UGTDataStreamerComponent {
-  GENERATED_BODY()
+UCLASS(
+    ClassGroup = (Custom),
+    meta = (BlueprintSpawnableComponent),
+    hidecategories = (Collision, Object, Physics, SceneComponent))
+class UNREALGT_API UGTHttpStreamerComponent : public UGTDataStreamerComponent
+{
+    GENERATED_BODY()
 
 public:
-  UGTHttpStreamerComponent();
+    UGTHttpStreamerComponent();
 
 protected:
-  virtual void OnDataReady(const TArray<uint8> &Data,
-                           const FDateTime &TimeStamp) override;
+    virtual void OnDataReady(const TArray<uint8>& Data, const FDateTime& TimeStamp) override;
 
 private:
-  UPROPERTY(EditDefaultsOnly, Category = Http)
-  FString TargetUrl;
+    UPROPERTY(EditDefaultsOnly, Category = Http)
+    FString TargetUrl;
 
-  UPROPERTY(EditDefaultsOnly, Category = Http)
-  EGTHttpMethod Method;
+    UPROPERTY(EditDefaultsOnly, Category = Http)
+    EGTHttpMethod Method;
 
-  UPROPERTY(EditDefaultsOnly, Category = Http)
-  EGTHttpContentType ContentType;
+    UPROPERTY(EditDefaultsOnly, Category = Http)
+    EGTHttpContentType ContentType;
 };

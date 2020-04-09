@@ -11,24 +11,24 @@
 /**
  *
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent),
-       hidecategories = (Collision, Object, Physics, SceneComponent))
-class UNREALGT_API UGTFileStreamerComponent : public UGTDataStreamerComponent {
-  GENERATED_BODY()
+UCLASS(
+    ClassGroup = (Custom),
+    meta = (BlueprintSpawnableComponent),
+    hidecategories = (Collision, Object, Physics, SceneComponent))
+class UNREALGT_API UGTFileStreamerComponent : public UGTDataStreamerComponent
+{
+    GENERATED_BODY()
 public:
-  UGTFileStreamerComponent();
+    UGTFileStreamerComponent();
 
 protected:
-  virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
 
-  virtual void OnDataReady(const TArray<uint8> &Data,
-                           const FDateTime &TimeStamp) override;
+    virtual void OnDataReady(const TArray<uint8>& Data, const FDateTime& TimeStamp) override;
 
 private:
-  UPROPERTY(EditAnywhere)
-  FString FileNameFormat;
+    UPROPERTY(EditAnywhere)
+    FString FileNameFormat;
 
-  int IDCounter;
-
-  static const FDateTime SessionStartTime;
+    int IDCounter;
 };

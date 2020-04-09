@@ -7,5 +7,6 @@
 UGTImageNormalGeneratorComponent::UGTImageNormalGeneratorComponent()
     : Super()
 {
+    bAntiAliasing = false;
     SceneCaptureComponent->SetupWorldNormalPostProccess();
 }

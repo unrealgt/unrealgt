@@ -13,6 +13,7 @@ UGTDepthImageGeneratorComponent::UGTDepthImageGeneratorComponent()
     : Super()
     , MaxZ(100000.f)
 {
+    bAntiAliasing = false;
 }
 
 void UGTDepthImageGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Canvas)

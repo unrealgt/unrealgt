@@ -4,13 +4,13 @@
 
 #include <CanvasItem.h>
 #include <CanvasTypes.h>
-#include <Components/PrimitiveComponent.h>
 #include <Components/StaticMeshComponent.h>
 #include <Engine/Engine.h>
 #include <Engine/StaticMesh.h>
 #include <Engine/TextureRenderTarget2D.h>
 #include <EngineUtils.h>
 
+#include "GTFileUtilities.h"
 #include "Generators/Image/GTImageGeneratorBase.h"
 #include "Generators/Image/GTSceneCaptureComponent2D.h"
 
@@ -148,15 +148,7 @@ void UGTActorInfoGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
 
     CurrentResult = Result.ReplaceEscapedCharWithChar();
 
-    TArray<uint8> Data;
-    Data.Reserve(CurrentResult.Len());
-
-    FTCHARToUTF8 UTF8Str(*CurrentResult);
-
-    for (int I = 0; I < UTF8Str.Length(); I++)
-    {
-        Data.Add(UTF8Str.Get()[I]);
-    }
+    const auto Data = FGTFileUtilities::StringToCharArray(CurrentResult);
 
     DataReadyDelegate.Broadcast(Data, TimeStamp);
 }

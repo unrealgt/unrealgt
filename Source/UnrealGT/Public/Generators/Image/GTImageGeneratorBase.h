@@ -87,6 +87,8 @@ protected:
      * Perform anti aliasing when an image is rendered.
      * Highly recommended for basic images, but might cause issues if used with segmentation or
      * depth generators.
+     *
+     * Temporal Anti-Aliasing might cause "jittering" if the generator is not moving.
      */
     UPROPERTY(EditDefaultsOnly, Category = Image)
     bool bAntiAliasing;

@@ -225,8 +225,10 @@ UTexture2D* UGTSceneCaptureComponent2D::TextureFromImage(const FGTImage& Image, 
 
 void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
     const TMap<FGTObjectFilter, FColor>& ComponentFilterToColor,
+    bool bShouldApplyCloseMorph,
     bool bColorEachComponentDifferent,
-    bool bShouldApplyCloseMorph)
+    bool bUseFilterForColorEachComponentDifferent,
+    const FGTObjectFilter& ColorEachComponentDifferentFilter)
 {
     int ArraySize = 256;
     ColorArray.Empty(ArraySize);
@@ -237,79 +239,120 @@ void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
     TMap<FGTObjectFilter, int> ComponentFilterToColorID;
     TMap<AActor*, int> ActorToColorID;
 
-    int ColorID = 1;
+    auto ColorID = 1;
+
+    // Create Random colorId array for bColorEachComponentDifferent
+    // This will allow consistent colors if the tracked component count exceeds 255
+    TArray<int> RandomColorIDs;
+    RandomColorIDs.Reserve(255);
+    for (auto I = 0; I < 255; I++)
+    {
+        RandomColorIDs.Push(I + 1);
+    }
+
+    int32 LastIndex = RandomColorIDs.Num() - 1;
+    for (int32 i = 0; i <= LastIndex; ++i)
+    {
+        int32 Index = FMath::RandRange(i, LastIndex);
+        if (i != Index)
+        {
+            RandomColorIDs.Swap(i, Index);
+        }
+    }
 
     for (TObjectIterator<UPrimitiveComponent> Itr; Itr; ++Itr)
     {
         UPrimitiveComponent* PrimitiveComponent = *Itr;
-        // TODO break once we hit stencil limit; (255)
+
         if (PrimitiveComponent->GetWorld() == GetWorld())
         {
-            if (bColorEachComponentDifferent && ColorID == 255)
-            {
-                ColorID = 1;
-            }
+            auto bHasMatch = false;
+            FColor ComponentColor;
+            auto ComponentColorID = ColorID;
 
-            for (const auto& FilterColorPair : ComponentFilterToColor)
+            if (bColorEachComponentDifferent)
             {
-                if (FilterColorPair.Key.MatchesComponent(PrimitiveComponent))
+                if (!bUseFilterForColorEachComponentDifferent ||
+                    (bUseFilterForColorEachComponentDifferent &&
+                     ColorEachComponentDifferentFilter.MatchesComponent(PrimitiveComponent)))
                 {
-                    int ComponentColorID;
-                    if (bColorEachComponentDifferent)
+                    bHasMatch = true;
+                    // Cylce through colors once we hit 255 limit
+                    if (ColorID <= 255)
                     {
-                        // TODO readd  to make all components of actor same color
-                        // and add option
-                        // if (PrimitiveComponent->GetOwner() &&
-                        // ActorToColorID.Contains(PrimitiveComponent->GetOwner()))
-                        //{
-                        //    ComponentColorID = ActorToColorID[PrimitiveComponent->GetOwner()];
-                        //}
-                        // else
-                        //{
-                        ComponentColorID = ColorID;
-                        ActorToColorID.Add(PrimitiveComponent->GetOwner(), ComponentColorID);
-                        ColorArray.Push(
-                            FLinearColor((float)ComponentColorID / (float)255 * 360.f, 0.99f, 0.99f)
-                                .HSVToLinearRGB()
-                                .ToFColor(false));
+                        auto Hue = RandomColorIDs[ComponentColorID - 1];
+
+                        ComponentColor = FLinearColor((float)Hue / (float)255 * 360.f, 0.99f, 0.99f)
+                                             .HSVToLinearRGB()
+                                             .ToFColor(false);
+
+                        ColorArray.Push(ComponentColor);
                         ColorID++;
-                        //}
-                    }
-                    else if (ComponentFilterToColorID.Contains(FilterColorPair.Key))
-                    {
-                        ComponentColorID = ComponentFilterToColorID[FilterColorPair.Key];
                     }
                     else
                     {
-                        ComponentColorID = ColorID;
-                        ComponentFilterToColorID.Add(FilterColorPair.Key, ComponentColorID);
-                        ColorArray.Push(FilterColorPair.Value);
+                        ComponentColorID = (ColorID - 1) % 255 + 1;
                         ColorID++;
                     }
-                    PrimitiveComponent->SetRenderCustomDepth(true);
-                    PrimitiveComponent->SetCustomDepthStencilValue(ComponentColorID);
-                    // TODO right now we choose the first filter that matches tmap order is random
-                    // so their should probably be a way to prioritize
-                    break;
                 }
-                else
+            }
+            else
+            {
+                for (const auto& FilterColorPair : ComponentFilterToColor)
                 {
-                    PrimitiveComponent->SetRenderCustomDepth(true);
-                    PrimitiveComponent->SetCustomDepthStencilValue(0);
+                    // TODO readd  to make all components of actor same color
+                    // and add option
+                    // if (PrimitiveComponent->GetOwner() &&
+                    // ActorToColorID.Contains(PrimitiveComponent->GetOwner()))
+                    //{
+                    //    ComponentColorID = ActorToColorID[PrimitiveComponent->GetOwner()];
+                    //}
+                    // else
+                    //{
+                    if (FilterColorPair.Key.MatchesComponent(PrimitiveComponent))
+                    {
+                        // Reuse color if this filter already had a match with another component
+                        if (ComponentFilterToColorID.Contains(FilterColorPair.Key))
+                        {
+                            ComponentColorID = ComponentFilterToColorID[FilterColorPair.Key];
+                        }
+                        else
+                        {
+                            ComponentColorID = ColorID;
+                            ColorArray.Push(ComponentColor);
+                            ColorID++;
+                        }
+                        bHasMatch = true;
+                        ComponentFilterToColorID.Add(FilterColorPair.Key, ComponentColorID);
+                        ComponentColor = FilterColorPair.Value;
+                    }
                 }
+            }
+
+            if (bHasMatch)
+            {
+                PrimitiveComponent->SetRenderCustomDepth(true);
+                PrimitiveComponent->SetCustomDepthStencilValue(ComponentColorID);
+
+                ComponentToColor.Add(PrimitiveComponent, ColorArray[ComponentColorID]);
+            }
+            else
+            {
+                PrimitiveComponent->SetRenderCustomDepth(true);
+                PrimitiveComponent->SetCustomDepthStencilValue(0);
             }
         }
     }
 
-    for (int I = ColorID; I < ArraySize; I++)
+    for (auto I = ColorID; I < ArraySize; I++)
     {
         ColorArray.Add(FColor::Black);
     }
 
-    int TextureSize = ArraySize * 3;
+    const auto TextureSize = ArraySize * 3;
     TArray<FColor> TextureColors;
     TextureColors.Reserve(TextureSize);
-    for (FColor Color : ColorArray)
+    for (auto Color : ColorArray)
     {
         TextureColors.Push(Color);
         TextureColors.Push(Color);
