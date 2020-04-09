@@ -14,12 +14,13 @@ class UGTSceneCaptureComponent2D;
 /**
  * Can generate segmentation for an image. You can assign components color by adding a filter color
  * pair to the ComponentToColor map.
+ * <br>
  * **Requires "Enabled with stencil" project setting in `Engine > Rendering > Postprocessing >
  * Custom-Depth Stencil Pass`**
- *
+ * <br>
  * Will emit a JSON file containing the configured color mappings
  * called "segmentation_info" in `Saved/UnrealGT/{SessionName}/{Time}/{SegmentationGeneratorName}`
- *
+ * <br>
  * **Note:** Anti-Aliasing is disabled for segmentation generators by default!
  */
 UCLASS(

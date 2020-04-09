@@ -14,9 +14,10 @@
  * image. This means the depth value is a 24bit with a maximum value of 16.777216 km. (TODO add
  * nanometer option). The RGB values can be converted to mm using the following formula:
  * `R + G * 256 + B * 256 * 256`.
+ * <br>
  * See https://github.com/unrealgt/unrealgt/blob/master/Examples/PythonDepthConvert/main.py for an
  * example.
- *
+ * <br>
  * **Note:** Anti-Aliasing is disabled for depth generators by default!
  */
 UCLASS(
