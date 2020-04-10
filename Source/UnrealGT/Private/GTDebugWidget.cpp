@@ -5,7 +5,7 @@
 
 #include "Engine.h"
 #include "Slate/SceneViewport.h"
-#include <Components/PrimitiveComponent.h>
+#include "Widgets/Input/STextComboBox.h"
 #include <Editor.h>
 #include <UnrealClient.h>
 
@@ -14,6 +14,9 @@
 
 void SGTDebugWidget::Construct(const FArguments& InArgs)
 {
+    // Add Placeholder until first generation
+    GeneratorComponentPaths.Add(MakeShared<FString>(TEXT("Select Generator Component")));
+
     // clang-format off
     ChildSlot
     [
@@ -21,8 +24,11 @@ void SGTDebugWidget::Construct(const FArguments& InArgs)
         + SVerticalBox::Slot()
         .AutoHeight()
         [
-            SNew(SEditableTextBox)
-            .OnTextChanged(this, &SGTDebugWidget::OnDataGeneratorNameUpdated)
+         SAssignNew(GeneratorComboBox, STextComboBox)
+		    .OptionsSource(&GeneratorComponentPaths)
+		    .InitiallySelectedItem(GeneratorComponentPaths[0])
+		    .OnComboBoxOpening_Lambda([this](){UpdateGeneratorPathList();})
+		    .OnSelectionChanged(this, &SGTDebugWidget::OnDataGeneratorPathUpdated)
         ]
         + SVerticalBox::Slot()
         .FillHeight(1.f)
@@ -55,14 +61,14 @@ void SGTDebugWidget::SetDataGenerator(UGTDataGeneratorComponent* DataGenerator)
     ((FGTDebugViewportClient*)Viewport->GetClient())->SetDataGenerator(DataGenerator);
 }
 
-void SGTDebugWidget::OnDataGeneratorNameUpdated(const FText& NewText)
+void SGTDebugWidget::OnDataGeneratorPathUpdated(TSharedPtr<FString> NewPath, ESelectInfo::Type SelectType)
 {
     UWorld* World = GEditor->PlayWorld;
     if (World)
     {
         for (TObjectIterator<UGTDataGeneratorComponent> Itr; Itr; ++Itr)
         {
-            if (Itr->GetWorld() == World && Itr->GetName().Contains(NewText.ToString()))
+            if (NewPath.IsValid() && Itr->GetWorld() == World && Itr->GetPathName() == *NewPath)
             {
                 SetDataGenerator(*Itr);
             }
@@ -77,6 +83,26 @@ void SGTDebugWidget::Tick(
 {
     Viewport->Invalidate();
     Viewport->InvalidateDisplay();
+}
+
+void SGTDebugWidget::UpdateGeneratorPathList()
+{
+    GeneratorComponentPaths.Reset();
+
+    UWorld* World = GEditor->PlayWorld;
+    if (World)
+    {
+        for (TObjectIterator<UGTDataGeneratorComponent> Itr; Itr; ++Itr)
+        {
+            if (Itr->GetWorld() == World)
+            {
+                GeneratorComponentPaths.Add(MakeShared<FString>(Itr->GetPathName()));
+            }
+        }
+    }
+
+    GeneratorComboBox->ClearSelection();
+    GeneratorComboBox->RefreshOptions();
 }
 
 #endif

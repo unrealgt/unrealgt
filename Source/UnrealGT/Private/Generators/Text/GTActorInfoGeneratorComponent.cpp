@@ -235,7 +235,7 @@ void UGTActorInfoGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Can
 
     FCanvasTextItem TextItem(
         FVector2D(0.f, TextOffset),
-        FText::FromString(CurrentResult),
+        FText::FromString(CurrentResult.Mid(0, 5000)),
         GEngine->GetMediumFont(),
         FLinearColor::Red);
     Canvas->DrawItem(TextItem);

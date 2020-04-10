@@ -1,18 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-#include "Widgets/SCompoundWidget.h"
 
 #if WITH_EDITOR
 
 #include "CoreMinimal.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
+#include "Widgets/SCompoundWidget.h"
 
 class SViewport;
 class FSceneViewport;
 class FCommonViewportClient;
 class UGTDataGeneratorComponent;
 class FGTDebugViewportClient;
+class STextComboBox;
 
 /**
  *
@@ -34,7 +35,7 @@ public:
 
     void SetDataGenerator(UGTDataGeneratorComponent* DataGenerator);
 
-    void OnDataGeneratorNameUpdated(const FText& NewText);
+    void OnDataGeneratorPathUpdated(TSharedPtr<FString> NewPath, ESelectInfo::Type SelectType);
 
     virtual void Tick(
         const FGeometry& AllottedGeometry,
@@ -50,6 +51,12 @@ private:
 
     /** Viewport widget*/
     TSharedPtr<SViewport> ViewportWidget;
+
+    TSharedPtr<STextComboBox> GeneratorComboBox;
+
+    TArray<TSharedPtr<FString>> GeneratorComponentPaths;
+
+    void UpdateGeneratorPathList();
 };
 
 #endif

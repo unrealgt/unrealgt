@@ -2,11 +2,14 @@
 
 #include "Generators/Image/GTSegmentationGeneratorComponent.h"
 
+#include "Algo/Accumulate.h"
+#include "CanvasItem.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/Engine.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
-#include "Policies/CondensedJsonPrintPolicy.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "Serialization/JsonSerializerMacros.h"
 #include "Serialization/JsonWriter.h"
 
@@ -19,22 +22,14 @@ UGTSegmentationGeneratorComponent::UGTSegmentationGeneratorComponent()
     bAntiAliasing = false;
 }
 
-void UGTSegmentationGeneratorComponent::BeginPlay()
+FString UGTSegmentationGeneratorComponent::GenerateSegmentationInfoJSON() const
 {
-    Super::BeginPlay();
-
-    SceneCaptureComponent->SetupSegmentationPostProccess(
-        ComponentToColor,
-        bShouldApplyCloseMorph,
-        bColorEachComponentDifferent,
-        bUseFilterForColorEachComponentDifferent,
-        ColorEachComponentDifferentFilter);
-
     FString SegmentationJSONInformation;
-    TSharedRef<TJsonWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>> JsonWriter =
-        TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(
+
+    TSharedRef<TJsonWriter<TCHAR, TPrettyJsonPrintPolicy<TCHAR>>> JsonWriter =
+        TJsonWriterFactory<TCHAR, TPrettyJsonPrintPolicy<TCHAR>>::Create(
             &SegmentationJSONInformation);
-    FJsonSerializerWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>> Serializer(JsonWriter);
+    FJsonSerializerWriter<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> Serializer(JsonWriter);
     Serializer.StartArray();
     for (auto ComponentColorPair : GetSceneCaptureComponent()->ComponentToColor)
     {
@@ -76,8 +71,48 @@ void UGTSegmentationGeneratorComponent::BeginPlay()
     Serializer.EndArray();
     JsonWriter->Close();
 
+    return SegmentationJSONInformation;
+}
+
+void UGTSegmentationGeneratorComponent::BeginPlay()
+{
+    Super::BeginPlay();
+
+    SceneCaptureComponent->SetupSegmentationPostProccess(
+        ComponentToColor,
+        bShouldApplyCloseMorph,
+        bColorEachComponentDifferent,
+        bUseFilterForColorEachComponentDifferent,
+        ColorEachComponentDifferentFilter);
+
+    DebugComponentToColorString = Algo::TransformAccumulate(
+        GetSceneCaptureComponent()->ComponentToColor,
+        [](const auto ComponentColorPair) {
+            return ComponentColorPair.Key->GetPathName() + TEXT(": ") +
+                   ComponentColorPair.Value.ToString() + TEXT("\n");
+        },
+        FString(TEXT("")));
+
     FGTFileUtilities::WriteFileToSessionDirectory(
         FPaths::Combine(GetName(), TEXT("segmentation_info.json")),
-        FGTFileUtilities::StringToCharArray(SegmentationJSONInformation),
+        FGTFileUtilities::StringToCharArray(GenerateSegmentationInfoJSON()),
         GetWorld());
+}
+
+void UGTSegmentationGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Canvas)
+{
+    Super::DrawDebug(Viewport, Canvas);
+
+    if (SceneCaptureComponent && SceneCaptureComponent->TextureTarget &&
+        SceneCaptureComponent->TextureTarget->IsValidLowLevel())
+    {
+        UTextureRenderTarget2D* DebugTextureTarget = SceneCaptureComponent->TextureTarget;
+
+        FCanvasTextItem TextItem(
+            FVector2D(DebugTextureTarget->Resource->GetSizeX(), 0.f),
+            FText::FromString(DebugComponentToColorString.Mid(0, 5000)),
+            GEngine->GetMediumFont(),
+            FLinearColor::Red);
+        Canvas->DrawItem(TextItem);
+    }
 }

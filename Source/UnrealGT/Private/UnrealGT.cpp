@@ -61,7 +61,7 @@ void FUnrealGTModule::StartupModule()
     FGlobalTabmanager::Get()
         ->RegisterNomadTabSpawner(
             TrainerTabName, FOnSpawnTab::CreateRaw(this, &FUnrealGTModule::OnSpawnPluginTab))
-        .SetDisplayName(LOCTEXT("FTrainerTabTitle", "Trainer"))
+        .SetDisplayName(LOCTEXT("FUnrealGTTabTitle", "UnrealGT: Generator Debug"))
         .SetMenuType(ETabSpawnerMenuType::Hidden);
 
     // Add details customization

@@ -34,7 +34,11 @@ public:
     UGTSegmentationGeneratorComponent();
 
 protected:
+    FString GenerateSegmentationInfoJSON() const;
+
     virtual void BeginPlay() override;
+
+    virtual void DrawDebug(FViewport* Viewport, FCanvas* Canvas) override;
 
 private:
     /**
@@ -49,7 +53,8 @@ private:
     TMap<FGTObjectFilter, FColor> ComponentToColor;
 
     /**
-     * This can improve segmentation quality for partially translucent meshes (e.g. Fences, Foliage...)
+     * This can improve segmentation quality for partially translucent meshes (e.g. Fences,
+     * Foliage...)
      */
     UPROPERTY(
         EditAnyWhere,
@@ -79,4 +84,6 @@ private:
              EditCondition =
                  "bColorEachComponentDifferent && bUseFilterForColorEachComponentDifferent"))
     FGTObjectFilter ColorEachComponentDifferentFilter;
+
+    FString DebugComponentToColorString;
 };
