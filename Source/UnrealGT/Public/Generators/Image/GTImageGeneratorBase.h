@@ -93,6 +93,12 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = Image)
     bool bAntiAliasing;
 
+    /**
+     * Toggle motion blur
+     */
+    UPROPERTY(EditDefaultsOnly, Category = Image)
+    bool bMotionBlur;
+
     UPROPERTY()
     bool bWriteAlpha;
 
