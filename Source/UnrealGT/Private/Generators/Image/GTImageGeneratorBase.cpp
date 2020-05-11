@@ -151,6 +151,7 @@ void UGTImageGeneratorBase::BeginPlay()
     SceneCaptureComponent->FOVAngle = FOVAngle;
     SceneCaptureComponent->ShowFlags.AntiAliasing = bAntiAliasing;
     SceneCaptureComponent->ShowFlags.TemporalAA = bAntiAliasing;
+    SceneCaptureComponent->ShowFlags.MotionBlur = true;
 }
 
 FIntPoint UGTImageGeneratorBase::GenerateRandomResolution()
