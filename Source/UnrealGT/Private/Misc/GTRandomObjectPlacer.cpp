@@ -85,7 +85,7 @@ void AGTRandomObjectPlacer::PostEditChangeProperty(FPropertyChangedEvent& Proper
 void AGTRandomObjectPlacer::PostEditMove(bool bFinished)
 {
     // Force position update of instanced meshes
-    if (GetWorld() && Points.Num() < 1000 || bFinished)
+    if (GetWorld() && (Points.Num() < 1000 || bFinished))
     {
         AddMeshes();
     }
