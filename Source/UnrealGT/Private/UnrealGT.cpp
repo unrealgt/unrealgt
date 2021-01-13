@@ -119,7 +119,7 @@ TSharedRef<SDockTab> FUnrealGTModule::OnSpawnPluginTab(const FSpawnTabArgs& Spaw
 
 void FUnrealGTModule::PluginButtonClicked()
 {
-    FGlobalTabmanager::Get()->InvokeTab(TrainerTabName);
+    FGlobalTabmanager::Get()->TryInvokeTab(TrainerTabName);
 }
 
 void FUnrealGTModule::AddMenuExtension(FMenuBuilder& Builder)

@@ -15,7 +15,7 @@ UGTHttpStreamerComponent::UGTHttpStreamerComponent()
 
 void UGTHttpStreamerComponent::OnDataReady(const TArray<uint8>& Data, const FDateTime& TimeStamp)
 {
-    TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+    auto Request = FHttpModule::Get().CreateRequest();
 
     Request->SetURL(TargetUrl);
 

@@ -101,7 +101,7 @@ void FGTGeneratorReferenceCustomization::CustomizeChildren(
 TArray<FName> FGTGeneratorReferenceCustomization::GetAvailableComponentNames()
 {
     TArray<FName> Result;
-    for (TFieldIterator<UObjectPropertyBase> Prop(OwnerClass); Prop; ++Prop)
+    for (TFieldIterator<FObjectPropertyBase> Prop(OwnerClass); Prop; ++Prop)
     {
         if (Prop->PropertyClass->IsChildOf(UGTDataGeneratorComponent::StaticClass()))
         {
@@ -136,7 +136,7 @@ void FGTGeneratorReferenceCustomization::GetAvailableComponentNamesForComboBox(
     TArray<bool>& OutRestrictedItems)
 {
     // TODO if in instance mode handle via get components
-    for (TFieldIterator<UObjectPropertyBase> Prop(OwnerClass); Prop; ++Prop)
+    for (TFieldIterator<FObjectPropertyBase> Prop(OwnerClass); Prop; ++Prop)
     {
         if (Prop->PropertyClass->IsChildOf(UGTDataGeneratorComponent::StaticClass()))
         {

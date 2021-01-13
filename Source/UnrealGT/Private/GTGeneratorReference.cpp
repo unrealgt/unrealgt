@@ -25,8 +25,8 @@ UGTDataGeneratorComponent* FGTGeneratorReference::GetComponent(AActor* OwningAct
         {
             if (ComponentProperty != NAME_None)
             {
-                UObjectPropertyBase* ObjProp =
-                    FindField<UObjectPropertyBase>(SearchActor->GetClass(), ComponentProperty);
+                FObjectPropertyBase* ObjProp =
+                    FindFProperty<FObjectPropertyBase>(SearchActor->GetClass(), ComponentProperty);
                 if (ObjProp != nullptr)
                 {
                     // .. and return the component that is there

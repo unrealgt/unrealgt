@@ -133,8 +133,8 @@ bool UGTImageGeneratorBase::GetStereoCalibrationParameters(
 
     // TODO Getattachparent is somewhat uncclean but since we scenecaptures are
     // usually only attached to iamgegenerators its okay for know i guess
-    OutRotation = SecondCamera->RelativeRotation - RelativeRotation;
-    OutTranslation = SecondCamera->RelativeLocation - RelativeLocation;
+    OutRotation = SecondCamera->GetRelativeRotation() - GetRelativeRotation();
+    OutTranslation = SecondCamera->GetRelativeLocation() - GetRelativeLocation();
 
     return true;
 }
