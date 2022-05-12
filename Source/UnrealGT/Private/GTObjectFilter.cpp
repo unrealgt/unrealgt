@@ -11,6 +11,11 @@ FGTObjectFilter::FGTObjectFilter()
       ActorInstance(nullptr) {}
 
 bool FGTObjectFilter::MatchesActor(AActor *Actor) const {
+  if(!IsValid(Actor))
+  {
+      return false;
+  }
+    
   if (ActorInstance) {
     return Actor == ActorInstance;
   }

@@ -22,7 +22,7 @@ void UGTDepthImageGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Ca
         SceneCaptureComponent->TextureTarget->IsValidLowLevel())
     {
         UTextureRenderTarget2D* DebugTextureTarget = SceneCaptureComponent->TextureTarget;
-        FTexture* RenderTextureResource = DebugTextureTarget->Resource;
+        FTexture* RenderTextureResource = DebugTextureTarget->GetResource();
         FCanvasTileItem TileItem(
             FVector2D::ZeroVector,
             RenderTextureResource,
@@ -63,7 +63,7 @@ void UGTDepthImageGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Ca
 
         UTexture2D* ConvertedDepthTexture =
             GetSceneCaptureComponent()->TextureFromImage(DepthImage);
-        FTexture* ConvertedDepthTextureTextureResource = ConvertedDepthTexture->Resource;
+        FTexture* ConvertedDepthTextureTextureResource = ConvertedDepthTexture->GetResource();
         FCanvasTileItem ConvertedDepthTileItem(
             FVector2D(TileItem.Size.X, 0.f),
             ConvertedDepthTextureTextureResource,

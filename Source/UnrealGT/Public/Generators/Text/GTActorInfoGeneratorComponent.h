@@ -30,18 +30,17 @@ public:
 
     UPROPERTY(EditAnywhere, Category = "Tracked Actors")
     TArray<FGTObjectFilter> TrackActorsThatMatchFilter;
-
+    
     /**
-     * Track only actors that are "on screen"/"within an image".
-     * This setting requires LinkedImageGenerator to be set.
+     * Requires LinkedImageGenerator to be set.
      */
     UPROPERTY(EditAnywhere, Category = "Tracked Actors")
-    bool bOnlyTrackRecentlyRenderedActors;
+    bool bOnlyTrackOnScreenActors = false;
 
-    UPROPERTY(EditAnywhere, Category = "Tracked Actors")
-    bool bOnlyTrackOnScreenActors;
-
-    UPROPERTY(EditAnywhere, Category = "Tracked Actors")
+    UPROPERTY(EditAnywhere, Category = "Tracked Actors", meta=(EditCondition="bOnlyTrackOnScreenActors"))
+    bool bRequireMinimumVisibleBoundingBox = false;
+    
+    UPROPERTY(EditAnywhere, Category = "Tracked Actors", meta=(EditCondition="bRequireMinimumVisibleBoundingBox"))
     FVector2D MinimalRequiredBoundingBoxSize;
 
     UPROPERTY(EditAnywhere, Category = "Tracked Actors")
@@ -114,6 +113,10 @@ public:
 
     virtual void DrawDebug(FViewport* Viewport, FCanvas* Canvas) override;
 
+#ifdef WITH_EDITOR
+    virtual bool CanEditChange(const FProperty* InProperty) const override;
+#endif
+
 protected:
     void BeginPlay() override;
 
@@ -127,7 +130,7 @@ private:
 
     TMap<AActor*, FBox2D> CachedBoundingBoxes;
 
-    bool IsActorRenderedOnScreen(AActor* Actor, float DeltaTime);
+    bool IsActorRenderedOnScreen(AActor* Actor);
 
     bool GetActorScreenBoundingBox(
         AActor* InActor,

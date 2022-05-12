@@ -55,7 +55,7 @@ void UGTImageGeneratorBase::DrawDebug(FViewport* Viewport, FCanvas* Canvas)
         SceneCaptureComponent->TextureTarget->IsValidLowLevel())
     {
         UTextureRenderTarget2D* DebugTextureTarget = SceneCaptureComponent->TextureTarget;
-        FTexture* RenderTextureResource = DebugTextureTarget->Resource;
+        FTexture* RenderTextureResource = DebugTextureTarget->GetResource();
         FCanvasTileItem TileItem(
             FVector2D::ZeroVector,
             RenderTextureResource,

@@ -285,12 +285,12 @@ void AGTRandomObjectPlacer::AddMeshes()
                 bool bShouldPlaceActor = false;
 
                 bool bHitAllowedActor =
-                    (Cast<ALandscape>(OutHit.Actor) && bAllowPlaceOnLandscape) ||
+                    (Cast<ALandscape>(OutHit.GetActor()) && bAllowPlaceOnLandscape) ||
                     AllowPlacementOnActorsThatMatchFilter.Num() == 0;
 
                 for (const FGTObjectFilter& Objectfilter : AllowPlacementOnActorsThatMatchFilter)
                 {
-                    if (Objectfilter.MatchesActor(OutHit.Actor.Get()))
+                    if (Objectfilter.MatchesActor(OutHit.GetActor()))
                     {
                         bHitAllowedActor = true;
                     }
@@ -314,9 +314,9 @@ void AGTRandomObjectPlacer::AddMeshes()
                         bool bSphereOnlyHitAllowedActors = true;
                         for (const FHitResult& SphereHit : OutHits)
                         {
-                            if (SphereHit.Actor.IsValid())
+                            if (IsValid(SphereHit.GetActor()))
                             {
-                                if (!bAllowPlaceOnLandscape && Cast<ALandscape>(SphereHit.Actor))
+                                if (!bAllowPlaceOnLandscape && Cast<ALandscape>(SphereHit.GetActor()))
                                 {
                                     bSphereOnlyHitAllowedActors = false;
                                 }
@@ -326,7 +326,7 @@ void AGTRandomObjectPlacer::AddMeshes()
                                     for (const FGTObjectFilter& ObjectFilter :
                                          AllowPlacementOnActorsThatMatchFilter)
                                     {
-                                        if (ObjectFilter.MatchesActor(SphereHit.Actor.Get()))
+                                        if (ObjectFilter.MatchesActor(SphereHit.GetActor()))
                                         {
                                             bOneFilterMatched = true;
                                         }

@@ -16,8 +16,6 @@
 
 UGTActorInfoGeneratorComponent::UGTActorInfoGeneratorComponent()
     : Super()
-    , bOnlyTrackRecentlyRenderedActors(true)
-    , bOnlyTrackOnScreenActors(true)
     , MinimalRequiredBoundingBoxSize(0, 0)
     , MaxDistanceToCamera(20000.f)
     , Header(TEXT(""))
@@ -62,12 +60,9 @@ void UGTActorInfoGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
                 if (FVector::DistSquared2D(Actor->GetActorLocation(), GetComponentLocation()) <=
                     MaxDistanceToCamera * MaxDistanceToCamera)
                 {
-                    float RecentlyRenderedThreshold = 10.f;
-                    // TODO link this to timed capture tirgger or just disable render time based
-                    // check
-                    if (!bOnlyTrackRecentlyRenderedActors ||
-                        (bOnlyTrackRecentlyRenderedActors &&
-                         IsActorRenderedOnScreen(Actor, RecentlyRenderedThreshold)))
+                    if (!bOnlyTrackOnScreenActors ||
+                        (bOnlyTrackOnScreenActors &&
+                         IsActorRenderedOnScreen(Actor)))
                     {
                         TrackedActors.Push(Actor);
                     }
@@ -166,7 +161,7 @@ void UGTActorInfoGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Can
 
         UTextureRenderTarget2D* LinkedImageTextureTarget =
             LinkedImageGeneratorComponent->GetSceneCaptureComponent()->TextureTarget;
-        FTexture* LinkedImageTextureResource = LinkedImageTextureTarget->Resource;
+        FTexture* LinkedImageTextureResource = LinkedImageTextureTarget->GetResource();
         FCanvasTileItem LinkedImageItem(
             FVector2D(0.f, 0.f),
             LinkedImageTextureResource,
@@ -199,7 +194,7 @@ void UGTActorInfoGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Can
                 // Draw segmetnation
                 UTextureRenderTarget2D* SegmentationTextureTarget =
                     SegmentationSceneCapture->TextureTarget;
-                FTexture* SegmentationResource = SegmentationTextureTarget->Resource;
+                FTexture* SegmentationResource = SegmentationTextureTarget->GetResource();
                 FCanvasTileItem SegmentationItem(
                     FVector2D(LinkedImageItem.Size.X, 0.f),
                     SegmentationResource,
@@ -215,7 +210,7 @@ void UGTActorInfoGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Can
 
                 // Draw colormap
                 UTexture2D* ColorMap = SegmentationSceneCapture->ColorMap;
-                FTexture* ColorMapResource = ColorMap->Resource;
+                FTexture* ColorMapResource = ColorMap->GetResource();
                 FCanvasTileItem ColorMapItem(
                     FVector2D(0.f, SegmentationItem.Size.Y),
                     ColorMapResource,
@@ -241,6 +236,19 @@ void UGTActorInfoGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* Can
     Canvas->DrawItem(TextItem);
 }
 
+bool UGTActorInfoGeneratorComponent::CanEditChange(const FProperty* InProperty) const
+{
+    if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(UGTActorInfoGeneratorComponent, bOnlyTrackOnScreenActors) || InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(UGTActorInfoGeneratorComponent, bAccurateBoundingBoxes))
+    {
+        if (!LinkedImageGenerator.IsSet())
+        {
+            return false;
+        }
+    }
+    
+    return Super::CanEditChange(InProperty);
+}
+
 void UGTActorInfoGeneratorComponent::BeginPlay()
 {
     Super::BeginPlay();
@@ -257,112 +265,29 @@ void UGTActorInfoGeneratorComponent::BeginPlay()
     }
 }
 
-bool UGTActorInfoGeneratorComponent::IsActorRenderedOnScreen(AActor* Actor, float DeltaTime)
+bool UGTActorInfoGeneratorComponent::IsActorRenderedOnScreen(AActor* Actor)
 {
-    // TODO
-    // float ActorLastRenderTimeOnScreen = -10000.f;
-    // for (const UActorComponent* ActorComponent : Actor->GetComponents())
-    //{
-    //    const UPrimitiveComponent* PrimComp = Cast<const UPrimitiveComponent>(ActorComponent);
-    //    if (PrimComp && PrimComp->IsRegistered())
-    //    {
-    //        ActorLastRenderTimeOnScreen = FMath::Max(ActorLastRenderTimeOnScreen,
-    //        PrimComp->LastRenderTimeOnScreen);
-    //    }
-    //}
-
-    // UWorld* World = GetWorld();
-
-    // if (!World || ActorLastRenderTimeOnScreen <= 0.f)
-    //{
-    //    return false;
-    //}
-    // TODO
-    float Difference = 0.f;  // World->GetTimeSeconds() - ActorLastRenderTimeOnScreen;
-
-    if (Difference <= 0.05f && bOnlyTrackOnScreenActors)
+    UGTImageGeneratorBase* LinkedImageGeneratorComponent =
+        Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
+    if (LinkedImageGeneratorComponent)
     {
-        UGTImageGeneratorBase* LinkedImageGeneratorComponent =
-            Cast<UGTImageGeneratorBase>(LinkedImageGenerator.GetComponent(GetOwner()));
-        if (LinkedImageGeneratorComponent)
-        {
-            if (!MinimalRequiredBoundingBoxSize.IsZero())
-            {
-                FBox2D ScreenBoundingBox;
-                GetActorScreenBoundingBox(Actor, LinkedImageGeneratorComponent, ScreenBoundingBox);
-                FVector2D ScreenBoundingBoxSize = ScreenBoundingBox.GetSize();
-                if (ScreenBoundingBoxSize.X < MinimalRequiredBoundingBoxSize.X ||
-                    ScreenBoundingBoxSize.Y < MinimalRequiredBoundingBoxSize.Y)
-                {
-                    return false;
-                }
-            }
+        FBox2D ScreenBoundingBox;
+        GetActorScreenBoundingBox(Actor, LinkedImageGeneratorComponent, ScreenBoundingBox);
+        const auto ScreenBoundingBoxSize = ScreenBoundingBox.GetSize();
 
-            return true;
-            // Disabled for now
-            // FVector ActorCenter;
-            // FVector ActorExtent;
-
-            // Actor->GetActorBounds(true, ActorCenter, ActorExtent);
-
-            // const int TestPointCount = 17;
-
-            // const FVector TestPoints[TestPointCount] = {// Center
-            //                                            FVector(0, 0, 0),
-            //                                            // Corners
-            //                                            FVector(0.99f, 0.99f, 0.99f),
-            //                                            FVector(0.99f, 0.99f, -0.99f),
-            //                                            FVector(0.99f, -0.99f, 0.99f),
-            //                                            FVector(0.99f, -0.99f, -0.99f),
-            //                                            FVector(-0.99f, 0.99f, 0.99f),
-            //                                            FVector(-0.99f, 0.99f, -0.99f),
-            //                                            FVector(-0.99f, -0.99f, 0.99f),
-            //                                            FVector(-0.99f, -0.99f, -0.99f),
-            //                                            // Between Corner and Center
-            //                                            FVector(0.5f, 0.5f, 0.5f),
-            //                                            FVector(0.5f, 0.5f, -0.5f),
-            //                                            FVector(0.5f, -0.5f, 0.5f),
-            //                                            FVector(0.5f, -0.5f, -0.5f),
-            //                                            FVector(-0.5f, 0.5f, 0.5f),
-            //                                            FVector(-0.5f, 0.5f, -0.5f),
-            //                                            FVector(-0.5f, -0.5f, 0.5f),
-            //                                            FVector(-0.5f, -0.5f, -0.5f)};
-
-            // FHitResult OutHit;
-            // FCollisionQueryParams CollisionParams;
-            // CollisionParams.bTraceComplex = bTraceComplex;
-
-            // int HitCount = 0;
-
-            // for (int TestPointItr = 0; TestPointItr < TestPointCount; TestPointItr++)
-            //{
-            //    bool bHit = GetWorld()->LineTraceSingleByChannel(OutHit,
-            //                                                     LinkedImageGeneratorComponent->GetComponentLocation(),
-            //                                                     ActorCenter +
-            //                                                     TestPoints[TestPointItr] *
-            //                                                     ActorExtent,
-            //                                                     ECollisionChannel::ECC_Visibility,
-            //                                                     CollisionParams);
-
-            //    // Check if hit actor is the actor we are looking for
-            //    if (bHit && OutHit.Actor == Actor)
-            //    {
-            //        HitCount++;
-            //    }
-            //}
-
-            //// TODO make this configurable
-            // return HitCount >= 3;
-        }
-        else
+        if (!bRequireMinimumVisibleBoundingBox && !ScreenBoundingBoxSize.IsNearlyZero())
         {
             return true;
         }
+        
+        if (ScreenBoundingBoxSize.X < MinimalRequiredBoundingBoxSize.X ||
+            ScreenBoundingBoxSize.Y < MinimalRequiredBoundingBoxSize.Y)
+        {
+            return false;
+        }
     }
-    else
-    {
-        return false;
-    }
+
+    return true;
 }
 
 bool UGTActorInfoGeneratorComponent::GetActorScreenBoundingBox(

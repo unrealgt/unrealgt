@@ -214,7 +214,7 @@ UTexture2D* UGTSceneCaptureComponent2D::TextureFromImage(const FGTImage& Image, 
         OutTexture->LODGroup = TextureGroup::TEXTUREGROUP_ColorLookupTable;
     }
 
-    FTexture2DMipMap& Mip = OutTexture->PlatformData->Mips[0];
+    FTexture2DMipMap& Mip = OutTexture->GetPlatformData()->Mips[0];
     void* Data = Mip.BulkData.Lock(LOCK_READ_WRITE);
     FMemory::Memcpy(Data, Image.Pixels.GetData(), Image.Width * Image.Height * sizeof(uint8) * 4);
     Mip.BulkData.Unlock();

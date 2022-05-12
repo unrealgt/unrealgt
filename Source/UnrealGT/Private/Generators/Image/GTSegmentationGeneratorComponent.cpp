@@ -109,7 +109,7 @@ void UGTSegmentationGeneratorComponent::DrawDebug(FViewport* Viewport, FCanvas* 
         UTextureRenderTarget2D* DebugTextureTarget = SceneCaptureComponent->TextureTarget;
 
         FCanvasTextItem TextItem(
-            FVector2D(DebugTextureTarget->Resource->GetSizeX(), 0.f),
+            FVector2D(DebugTextureTarget->GetResource()->GetSizeX(), 0.f),
             FText::FromString(DebugComponentToColorString.Mid(0, 5000)),
             GEngine->GetMediumFont(),
             FLinearColor::Red);

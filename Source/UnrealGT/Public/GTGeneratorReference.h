@@ -17,14 +17,11 @@ public:
   /** Name of component property to use */
   UPROPERTY(EditAnywhere, Category = Component)
   FName ComponentProperty;
-
-  /** Allows direct setting of first component to constraint. */
-  TWeakObjectPtr<UGTDataGeneratorComponent> OverrideComponent;
-
+    
   FGTGeneratorReference();
 
+  bool IsSet() const;
+    
   /** Get the actual component pointer from this reference */
   UGTDataGeneratorComponent *GetComponent(AActor *OwningActor) const;
-
-  UGTDataGeneratorComponent *GetComponent(UClass *OwnerClass) const;
 };

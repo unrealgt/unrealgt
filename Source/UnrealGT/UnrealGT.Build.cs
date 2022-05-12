@@ -31,7 +31,7 @@ public class UnrealGT : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-                "Http",
+                "HTTP",
                 "Json",
                 "JsonUtilities",
                 "CinematicCamera",
