@@ -311,6 +311,7 @@ void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
                     //{
                     if (FilterColorPair.Key.MatchesComponent(PrimitiveComponent))
                     {
+                        ComponentColor = FilterColorPair.Value;
                         // Reuse color if this filter already had a match with another component
                         if (ComponentFilterToColorID.Contains(FilterColorPair.Key))
                         {
@@ -324,7 +325,6 @@ void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
                         }
                         bHasMatch = true;
                         ComponentFilterToColorID.Add(FilterColorPair.Key, ComponentColorID);
-                        ComponentColor = FilterColorPair.Value;
                     }
                 }
             }
