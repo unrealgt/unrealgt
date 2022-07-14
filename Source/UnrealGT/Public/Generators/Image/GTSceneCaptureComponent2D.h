@@ -9,6 +9,7 @@
 
 #include "GTImage.h"
 #include "GTObjectFilter.h"
+#include "GTRandomColorGenerator.h"
 
 #include "GTSceneCaptureComponent2D.generated.h"
 
@@ -16,7 +17,7 @@ class UTexture2D;
 class UMaterial;
 class UMaterialInstanceDynamic;
 class UGTImageGeneratorBase;
-
+class RandomColorGenerator;
 /**
  *
  */
@@ -80,6 +81,7 @@ protected:
 
 private:
     TArray<FColor> ColorArray;
+    GTRandomColorGenerator RandomColorGenerator;
 
     // TODO remove after debuging or write getter
 public:
