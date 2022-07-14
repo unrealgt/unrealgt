@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Components/ActorComponent.h"
+#include "GTGeneratorTrigger.h"
 #include "CoreMinimal.h"
 
 #include "GTGeneratorReference.h"
@@ -10,15 +10,13 @@
 #include "GTTimedGeneratorTrigger.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class UNREALGT_API UGTTimedGeneratorTrigger : public UActorComponent {
+class UNREALGT_API UGTTimedGeneratorTrigger : public UGTGeneratorTrigger
+{
   GENERATED_BODY()
 
 public:
   // Sets default values for this component's properties
   UGTTimedGeneratorTrigger();
-
-public:
-  virtual void Trigger();
 
 protected:
   // Called when the game starts
@@ -31,10 +29,6 @@ private:
   UPROPERTY(EditAnywhere, Category = TriggerSettings,
             meta = (EditCondition = "!bTriggerEveryFrame", ClampMin = 0))
   float FrameRate;
-
-  UPROPERTY(EditAnywhere, Category = TriggerSettings,
-            meta = (EditCondition = "!bTriggerAllGeneratorComponents"))
-  TArray<FGTGeneratorReference> DataGenerators;
 
   FTimerHandle TriggerTimerHandle;
 };
