@@ -22,6 +22,35 @@ UGTSegmentationGeneratorComponent::UGTSegmentationGeneratorComponent()
     bAntiAliasing = false;
 }
 
+void UGTSegmentationGeneratorComponent::RegisterForSegmentation(
+    UPrimitiveComponent* PrimitiveComponent)
+{
+    WaitingToBeRegistered.Add(PrimitiveComponent);
+}
+
+void UGTSegmentationGeneratorComponent::GenerateData(const FDateTime& TimeStamp)
+{
+    if (!WaitingToBeRegistered.IsEmpty())
+    {
+        for (auto p : WaitingToBeRegistered)
+        {
+            SceneCaptureComponent->RegisterForSegmentation(
+                p,
+                ComponentToColor,
+                bColorEachComponentDifferent,
+                bUseFilterForColorEachComponentDifferent,
+                ColorEachComponentDifferentFilter);
+        }
+        SceneCaptureComponent->SetupSegmentationBlendable(bShouldApplyCloseMorph);
+        FGTFileUtilities::WriteFileToSessionDirectory(
+            FPaths::Combine(GetName(), TEXT("segmentation_info.json")),
+            FGTFileUtilities::StringToCharArray(GenerateSegmentationInfoJSON()),
+            GetWorld());
+        WaitingToBeRegistered.Empty(WaitingToBeRegistered.Num());
+    }
+    Super::GenerateData(TimeStamp);
+}
+
 FString UGTSegmentationGeneratorComponent::GenerateSegmentationInfoJSON() const
 {
     FString SegmentationJSONInformation;

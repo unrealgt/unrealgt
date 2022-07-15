@@ -248,6 +248,41 @@ FColor DetermineColor(
     return KBlack;
 }
 
+void UGTSceneCaptureComponent2D::RegisterForSegmentation(
+    UPrimitiveComponent* PrimitiveComponent, 
+    const TMap<FGTObjectFilter, FColor>& ComponentFilterToColor,
+    bool bColorEachComponentDifferent,
+    bool bUseFilterForColorEachComponentDifferent,
+    const FGTObjectFilter& ColorEachComponentDifferentFilter)
+{
+    if (NextAssignableColorArrayIndex > KMaxColorIndex)
+    {
+        // TODO(tha-carta): Define a custom logging category for UnrealGT.
+        UE_LOG(LogTemp, Warning, TEXT("Reached the maximum number of segmentation colors."))
+        return;
+    }
+
+    if (PrimitiveComponent->GetWorld() != GetWorld()) return;
+
+    const auto PrimColor = bColorEachComponentDifferent
+                               ? AssignRandomColor(
+                                     PrimitiveComponent,
+                                     bUseFilterForColorEachComponentDifferent,
+                                     ColorEachComponentDifferentFilter,
+                                     RandomColorGenerator)
+                               : DetermineColor(PrimitiveComponent, ComponentFilterToColor);
+    if (!ColorIndexCache.Contains(PrimColor))
+    {
+        ColorArray[NextAssignableColorArrayIndex] = PrimColor;
+        ColorIndexCache.Emplace(PrimColor, NextAssignableColorArrayIndex);
+        NextAssignableColorArrayIndex++;
+    }
+    PrimitiveComponent->SetRenderCustomDepth(true);
+    PrimitiveComponent->SetCustomDepthStencilValue(ColorIndexCache[PrimColor]);
+    if (PrimColor != KBlack)
+        ComponentToColor.Add(PrimitiveComponent, ColorArray[ColorIndexCache[PrimColor]]);
+}
+
 void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
     const TMap<FGTObjectFilter, FColor>& ComponentFilterToColor,
     bool bShouldApplyCloseMorph,
@@ -255,47 +290,23 @@ void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
     bool bUseFilterForColorEachComponentDifferent,
     const FGTObjectFilter& ColorEachComponentDifferentFilter)
 {
-    const int KMaxColorIdx = 255;
-    ColorArray.Init(KBlack, KMaxColorIdx + 1); // Prefill with black.
-    int NextColorIdx = 0;
+    ColorArray.Init(KBlack, KMaxColorIndex + 1);  // Prefill with black.
+    ColorIndexCache.Reserve(KMaxColorIndex + 1);
 
-    // Hold onto the indices of already assigned colors so we can give the 
-    // same ColorArray index to objects that should have the same color.
-    TMap<FColor, int> ColorToIndex;
-    ColorToIndex.Reserve(KMaxColorIdx + 1);
-    
     for (TObjectIterator<UPrimitiveComponent> Itr; Itr; ++Itr)
     {
-        if (NextColorIdx > KMaxColorIdx)
-        {
-            // TODO(tha-carta): Define a custom logging category for UnrealGT.
-            UE_LOG(LogTemp, Warning, TEXT("Reached the maximum number of segmentation colors."))
-            break;
-        }
-
-        UPrimitiveComponent* PrimitiveComponent = *Itr;
-        if (PrimitiveComponent->GetWorld() != GetWorld()) continue;
-
-        const auto PrimColor =
-            bColorEachComponentDifferent
-                                   ? AssignRandomColor(
-                                         PrimitiveComponent,
-                                         bUseFilterForColorEachComponentDifferent,
-                                         ColorEachComponentDifferentFilter,
-                                         RandomColorGenerator)
-                                   : DetermineColor(PrimitiveComponent, ComponentFilterToColor);
-        if (!ColorToIndex.Contains(PrimColor))
-        {
-            ColorArray[NextColorIdx] = PrimColor;
-            ColorToIndex.Emplace(PrimColor, NextColorIdx);
-            NextColorIdx++;
-        }
-        PrimitiveComponent->SetRenderCustomDepth(true);
-        PrimitiveComponent->SetCustomDepthStencilValue(ColorToIndex[PrimColor]);
-        // TODO(tha-carta): Is this used anywhere?
-        if (PrimColor != KBlack) ComponentToColor.Add(PrimitiveComponent, ColorArray[ColorToIndex[PrimColor]]);
+        RegisterForSegmentation(
+            *Itr,
+            ComponentFilterToColor,
+            bColorEachComponentDifferent,
+            bUseFilterForColorEachComponentDifferent,
+            ColorEachComponentDifferentFilter);
     }
-    
+    SetupSegmentationBlendable(bShouldApplyCloseMorph);
+}
+
+void UGTSceneCaptureComponent2D::SetupSegmentationBlendable(bool bShouldApplyCloseMorph)
+    {    
     const auto TextureSize = ColorArray.Num() * 3;
     TArray<FColor> TextureColors;
     TextureColors.Reserve(TextureSize);
@@ -310,6 +321,7 @@ void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
     ColorMapImage.Pixels = TextureColors;
     ColorMap = TextureFromImage(ColorMapImage, true);
 
+    RemoveBlendable(SegmentationPostProcessMaterialInstance);
     if (bShouldApplyCloseMorph)
     {
         SegmentationPostProcessMaterialInstance =
@@ -334,7 +346,7 @@ void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
 
 void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
     const TArray<FGTObjectFilter>& ComponentFilters,
-    bool bShouldApplyCloseMorph)
+    bool bColorEachComponentDifferent)
 {
     TMap<FGTObjectFilter, FColor> ComponentFilterToColor;
     ComponentFilterToColor.Reserve(ComponentFilters.Num());
@@ -344,7 +356,7 @@ void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
         ComponentFilterToColor.Add(ComponentFilter, FColor::Black);
     }
 
-    SetupSegmentationPostProccess(ComponentFilterToColor, true, bShouldApplyCloseMorph);
+    SetupSegmentationPostProccess(ComponentFilterToColor, true, bColorEachComponentDifferent);
 }
 
 TArray<FColor> UGTSceneCaptureComponent2D::GetSegmentColorsUsedForActor(AActor* Actor)
