@@ -15,9 +15,6 @@ UGTGeneratorTrigger::UGTGeneratorTrigger()
 void UGTGeneratorTrigger::Trigger()
 {
     FDateTime TimeStamp = FDateTime::Now();
-    // TODO re-add trigger all option
-    // TODO so linkedimage generators in actor info are triggered before actor
-    // ifno segmentation
     for (const FGTGeneratorReference& GeneratorReference : DataGenerators)
     {
         UGTDataGeneratorComponent* GeneratorComponent = GeneratorReference.GetComponent(GetOwner());
