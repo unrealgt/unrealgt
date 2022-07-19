@@ -16,7 +16,7 @@
 	"Modules": [
 		{
 			"Name": "UnrealGT",
-			"Type": "Editor",
+			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
 	]
