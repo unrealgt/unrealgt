@@ -19,7 +19,7 @@ void UGTTimedGeneratorTrigger::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (FrameRate != 0.0)
+    if (FrameRate <= 0.F)
     {
         GetWorld()->GetTimerManager().SetTimer(
             TriggerTimerHandle, this, &UGTTimedGeneratorTrigger::Trigger, 1 / FrameRate, true);
