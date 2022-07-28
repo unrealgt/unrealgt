@@ -17,7 +17,6 @@ class UTexture2D;
 class UMaterial;
 class UMaterialInstanceDynamic;
 class UGTImageGeneratorBase;
-class RandomColorGenerator;
 /**
  *
  */
@@ -89,11 +88,10 @@ protected:
     void BeginPlay() override;
 
 private:
-    const int KMaxColorIndex = 255;
     TArray<FColor> ColorArray;
     int NextAssignableColorArrayIndex = 0;
     TMap<FColor, int> ColorIndexCache;
-    GTRandomColorGenerator RandomColorGenerator;
+    FGTRandomColorGenerator RandomColorGenerator;
 
     // TODO remove after debuging or write getter
 public:

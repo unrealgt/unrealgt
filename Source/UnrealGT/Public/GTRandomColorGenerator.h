@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 
-struct UNREALGT_API GTRandomColorGenerator
+struct UNREALGT_API FGTRandomColorGenerator
 {
 public:
-    GTRandomColorGenerator(int MaxHue = 255);
+    FGTRandomColorGenerator(int MaxHue = 255);
     FColor GetNextRandomColor();
 
 private:

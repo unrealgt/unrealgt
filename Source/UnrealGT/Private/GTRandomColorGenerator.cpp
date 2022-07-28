@@ -2,40 +2,43 @@
 
 #include "Math/Color.h"
 
-TArray<int> MakeSequentialIndexArray(const int FirstIndex, const int LastIndex)
+namespace
 {
-    TArray<int> arr;
-    arr.Reserve(255);
-    for (auto i = FirstIndex; i <= LastIndex; i++)
-        arr.Emplace(i);
-    return arr;
-}
-
-void ShuffleArray(TArray<int>& Arr)
-{
-    for (int i = 0; i < Arr.Num(); ++i)
+    TArray<int> MakeSequentialIndexArray(const int FirstIndex, const int LastIndex)
     {
-        int Index = FMath::RandRange(i, Arr.Num() - 1);
-        if (i != Index)
+        TArray<int> arr;
+        arr.Reserve(LastIndex - FirstIndex + 1);
+        for (auto i = FirstIndex; i <= LastIndex; i++)
+            arr.Emplace(i);
+        return arr;
+    }
+
+    void ShuffleArray(TArray<int>& Arr)
+    {
+        for (int i = 0; i < Arr.Num(); ++i)
         {
-            Arr.Swap(i, Index);
+            int Index = FMath::RandRange(i, Arr.Num() - 1);
+            if (i != Index)
+            {
+                Arr.Swap(i, Index);
+            }
         }
+    }
+
+    TArray<int> MakeShuffledIntArray(const int LowestIndex, const int HighestIndex)
+    {
+        TArray<int> IDs = MakeSequentialIndexArray(LowestIndex, HighestIndex);
+        ShuffleArray(IDs);
+        return IDs;
     }
 }
 
-TArray<int> MakeShuffledIntArray(const int LowestIndex, const int HighestIndex)
-{
-    TArray<int> IDs = MakeSequentialIndexArray(LowestIndex, HighestIndex);
-    ShuffleArray(IDs);
-    return IDs;
-}
-
-GTRandomColorGenerator::GTRandomColorGenerator(int MaxHue)
+FGTRandomColorGenerator::FGTRandomColorGenerator(int MaxHue)
     : RandomHues(MakeShuffledIntArray(1, MaxHue))
 {
 }
 
-FColor GTRandomColorGenerator::GetNextRandomColor()
+FColor FGTRandomColorGenerator::GetNextRandomColor()
 {
     const auto Hue = RandomHues[CurrentIndex];
     CurrentIndex = (CurrentIndex + 1) % RandomHues.Num();

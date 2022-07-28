@@ -8,7 +8,10 @@
 #include <Engine/TextureRenderTarget2D.h>
 #include <Materials/MaterialInstanceDynamic.h>
 
-const FColor KBlack = FColor(0, 0, 0, 255);
+namespace
+{
+    constexpr int MaxColorIndex = 255;
+}
 
 UGTSceneCaptureComponent2D::UGTSceneCaptureComponent2D()
     : Super()
@@ -230,10 +233,10 @@ FColor AssignRandomColor(
     UPrimitiveComponent* PrimitiveComponent,
     bool bUseFilterForColorEachComponentDifferent,
     const FGTObjectFilter& ColorEachComponentDifferentFilter,
-    GTRandomColorGenerator& RandomColorGenerator)
+    FGTRandomColorGenerator& RandomColorGenerator)
 {
     if (!bUseFilterForColorEachComponentDifferent) return RandomColorGenerator.GetNextRandomColor();
-    if (!ColorEachComponentDifferentFilter.MatchesComponent(PrimitiveComponent)) return KBlack;
+    if (!ColorEachComponentDifferentFilter.MatchesComponent(PrimitiveComponent)) return FColor::Black;
     return RandomColorGenerator.GetNextRandomColor();
 }
 
@@ -245,7 +248,7 @@ FColor DetermineColor(
     {
         if (FilterColorPair.Key.MatchesComponent(PrimitiveComponent)) return FilterColorPair.Value;
     }
-    return KBlack;
+    return FColor::Black;
 }
 
 void UGTSceneCaptureComponent2D::RegisterForSegmentation(
@@ -255,7 +258,7 @@ void UGTSceneCaptureComponent2D::RegisterForSegmentation(
     bool bUseFilterForColorEachComponentDifferent,
     const FGTObjectFilter& ColorEachComponentDifferentFilter)
 {
-    if (NextAssignableColorArrayIndex > KMaxColorIndex)
+    if (NextAssignableColorArrayIndex > MaxColorIndex)
     {
         // TODO(tha-carta): Define a custom logging category for UnrealGT.
         UE_LOG(LogTemp, Warning, TEXT("Reached the maximum number of segmentation colors."))
@@ -279,7 +282,7 @@ void UGTSceneCaptureComponent2D::RegisterForSegmentation(
     }
     PrimitiveComponent->SetRenderCustomDepth(true);
     PrimitiveComponent->SetCustomDepthStencilValue(ColorIndexCache[PrimColor]);
-    if (PrimColor != KBlack)
+    if (PrimColor != FColor::Black)
         ComponentToColor.Add(PrimitiveComponent, ColorArray[ColorIndexCache[PrimColor]]);
 }
 
@@ -290,8 +293,8 @@ void UGTSceneCaptureComponent2D::SetupSegmentationPostProccess(
     bool bUseFilterForColorEachComponentDifferent,
     const FGTObjectFilter& ColorEachComponentDifferentFilter)
 {
-    ColorArray.Init(KBlack, KMaxColorIndex + 1);  // Prefill with black.
-    ColorIndexCache.Reserve(KMaxColorIndex + 1);
+    ColorArray.Init(FColor::Black, MaxColorIndex + 1);  // Prefill with black.
+    ColorIndexCache.Reserve(MaxColorIndex + 1);
 
     for (TObjectIterator<UPrimitiveComponent> Itr; Itr; ++Itr)
     {
