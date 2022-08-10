@@ -33,6 +33,11 @@ class UNREALGT_API UGTSegmentationGeneratorComponent : public UGTImageGeneratorB
 public:
     UGTSegmentationGeneratorComponent();
 
+    UFUNCTION(BlueprintCallable, Category = UnrealGTSegmentation)
+    void RegisterForSegmentation(UPrimitiveComponent* PrimitiveComponent);
+
+    virtual void GenerateData(const FDateTime& TimeStamp) override;
+
 protected:
     FString GenerateSegmentationInfoJSON() const;
 
@@ -86,4 +91,5 @@ private:
     FGTObjectFilter ColorEachComponentDifferentFilter;
 
     FString DebugComponentToColorString;
+    TArray<UPrimitiveComponent*> WaitingToBeRegistered;
 };

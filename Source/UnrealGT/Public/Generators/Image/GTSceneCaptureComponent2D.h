@@ -9,6 +9,7 @@
 
 #include "GTImage.h"
 #include "GTObjectFilter.h"
+#include "GTRandomColorGenerator.h"
 
 #include "GTSceneCaptureComponent2D.generated.h"
 
@@ -16,7 +17,6 @@ class UTexture2D;
 class UMaterial;
 class UMaterialInstanceDynamic;
 class UGTImageGeneratorBase;
-
 /**
  *
  */
@@ -63,7 +63,16 @@ public:
 
     void SetupSegmentationPostProccess(
         const TArray<FGTObjectFilter>& ComponentFilters,
-        bool bShouldApplyCloseMorph = false);
+        bool bColorEachComponentDifferent = false);
+
+    void SetupSegmentationBlendable(bool bShouldApplyCloseMorph);
+
+    void RegisterForSegmentation(
+        UPrimitiveComponent *PrimitiveComponent,
+        const TMap<FGTObjectFilter, FColor>& ComponentFilterToColor,
+        bool bColorEachComponentDifferent = false,
+        bool bUseFilterForColorEachComponentDifferent = false,
+        const FGTObjectFilter& ColorEachComponentDifferentFilter = FGTObjectFilter());
 
     TArray<FColor> GetSegmentColorsUsedForActor(AActor* Actor);
 
@@ -80,6 +89,9 @@ protected:
 
 private:
     TArray<FColor> ColorArray;
+    int NextAssignableColorArrayIndex = 0;
+    TMap<FColor, int> ColorIndexCache;
+    FGTRandomColorGenerator RandomColorGenerator;
 
     // TODO remove after debuging or write getter
 public:
